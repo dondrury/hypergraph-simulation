@@ -6,21 +6,23 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start-dev": "npm run gulp",
-    "gulp": "node node_modules/gulp/bin/gulp.js "
+    "gulp": "node node_modules/gulp/bin/gulp.js ",
+    "repair": "rm -rf node_modules/gulp-eslint/node_modules/eslint/*"
   },
   "author": "Don Drury",
   "license": "MIT",
   "dependencies": {
     "dotenv": "^10.0.0",
-    "ejs": "^3.1.6",
-    "express": "^4.17.1"
+    "ejs": "^3.1.8",
+    "express": "^4.18.2",
+    "mongoose": "^6.8.3"
   },
   "devDependencies": {
     "@babel/core": "^7.14.6",
     "@babel/preset-env": "^7.14.7",
     "babelify": "^10.0.0",
     "browserify": "^17.0.0",
-    "chalk": "^4.1.1",
+    "chalk": "^4.1.2",
     "eslint": "^7.30.0",
     "eslint-config-standard": "^16.0.3",
     "eslint-plugin-import": "^2.23.4",
