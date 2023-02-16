@@ -3,9 +3,10 @@ const path = require('path')
 const express = require('express')
 const chalk = require('chalk')
 const mongoose = require('mongoose')
+const graphController = require('./controllers/graph')
 mongoose.set('strictQuery', true)
 const app = express()
-const port = process.env.PORT
+
 
 const reconnectAttemptDuration = 2000
 let connector = {}
@@ -49,9 +50,12 @@ mongoose.connection.on('error', () => {
 app.set('views', 'views')
 app.set('view engine', 'ejs')
 app.enable('strict routing')
-app.get('/', (req, res) => {
-  res.render('layout', {})
+app.get('/', (req, res) => { // if page is left unspecified, this will direct to 404
+  res.render('layout', { title: 'Home', view: 'home' })
 })
+app.get('/graph/byId', graphController.getGraph)
+app.get('/graph/:id', graphController.getGraph)
+
 
 var publicServeOptions = {
   dotfiles: 'ignore',
@@ -64,6 +68,9 @@ var publicServeOptions = {
 }
 app.use('/', express.static(path.join(__dirname, 'public'), publicServeOptions))
 
-app.listen(port, () => {
-  console.log(`Hypergraph app listening at http://localhost:${port}`)
+app.get('*', (req, res) => { // if page is left unspecified, this will direct to 404
+  res.status(404).render('layout', { title: 'Sorry Not Found', view: '404' })
+})
+app.listen(process.env.PORT, () => {
+  console.log(`Hypergraph app listening at http://localhost:${process.env.PORT}`)
 })
