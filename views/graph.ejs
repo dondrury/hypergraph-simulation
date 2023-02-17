@@ -1,0 +1,9 @@
+<%- include('graphSVG') %>
+<div>
+  <br>
+  <a class="h3" href="/graph/next/<%= graph.id %>">Next Graph in Timeline</a>
+</div>
+
+<script>
+  window.graph = <%- JSON.stringify(graph) %> ;
+</script>

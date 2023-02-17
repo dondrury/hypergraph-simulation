@@ -1,0 +1,9 @@
+<% const scale = 20 %>
+
+<svg width="<%= graph.size * scale %>" height="<%= graph.size * scale %>" >
+  <% for (var i = 0; i < graph.size; i++) { %>
+      <% for (var j = 0; j < graph.size; j++) { %>
+        <rect x="<%= j * scale %>" y="<%= i * scale %>" width="<%= scale %>" height="<%= scale %>" style="fill:<%= graph.cartesian[i][j] ? 'black' : 'white' %>;stroke:black;stroke-width:1;" />
+      <% } %>
+  <% } %>
+</svg>
