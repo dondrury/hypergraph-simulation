@@ -1,0 +1,26 @@
+<% const scale = 20
+
+ const vectors = graph.vectors
+ let totalVectorsLength = 0
+ for (var i = 0; i < vectors.length; i++) {
+   totalVectorsLength += vectors[i].length
+ }
+ const averageVectorLength = totalVectorsLength / vectors.length
+ // console.log({ averageVectorLength });
+ const yOffsetFromTop = scale * vectors.length
+ const graphWidth = (vectors.length + 1) * scale * 2 + averageVectorLength
+%>
+<div class="svg-graph">
+  <svg width="<%= graphWidth * 2 %>" height="<%=vectors.length * scale * 2 %>" >
+    <% for (var i = 0; i < vectors.length; i++) {
+      const halfWidth = vectors[i].length / 2
+      vectors[i].splice(halfWidth, 0, false)
+      console.log(vectors[i]);
+       %>
+        <% for (var j = 0; j < vectors[i].length; j++) { %>
+          <rect x="<%= scale * (i + j + 1) + graphWidth / 2 %>" y="<%= i * scale + yOffsetFromTop %>" width="<%= scale %>" height="<%= scale %>" style="fill:<%= vectors[i][j] ? 'black' : 'white' %>;stroke:black;stroke-width:1;" />
+          <rect x="<%= graphWidth / 2 - scale * (i + j - 4) %>" y="<%= yOffsetFromTop - (i + 1 ) * scale%>" width="<%= scale %>" height="<%= scale %>" style="fill:<%= vectors[i][j] ? 'black' : 'white' %>;stroke:black;stroke-width:1;" />
+        <% } %>
+    <% } %>
+  </svg>
+</div>

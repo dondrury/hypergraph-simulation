@@ -1,6 +1,6 @@
 const Graph = require('../models/graph')
-const atomicVectorsModel = require('../models/atomicVectors')
-const atomicVectors = atomicVectorsModel.all()
+// const atomicVectorsModel = require('../models/atomicVectors')
+// const atomicVectors = atomicVectorsModel.all()
 
 exports.getGraph = (req, res) => {
   const id = req.query.id || req.params.id
@@ -13,11 +13,12 @@ exports.getGraph = (req, res) => {
 }
 
 exports.newGraph = (req, res) => {
-  const graph = new Graph({ size: 15 })
-  graph.fillFalse()
+  const graph = new Graph({ name: '7,13,11,14' })
+  // graph.fillFalse()
   //
   // graph.saturate()
-  graph.fill([7, 11, 13])
+  graph.create()
+  // graph.fill([7, 11, 13])
   graph.print()
   graph.save((err, g) => {
     if (err) {

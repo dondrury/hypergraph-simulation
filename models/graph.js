@@ -5,8 +5,10 @@ const atomicVectors = atomicVectorsModel.all()
 const graphSchema = new mongoose.Schema({
   adjascent: { type: mongoose.Schema.Types.ObjectId, ref: 'Graph' },
   cartesian: { type: Array },
-  size: { type: Number, required: true, index: true }
+  vectors: { type: Array },
+  // size: { type: Number, required: true, index: true },
   // density: { type: Number, required: true, index: true }
+  name: { type: String }
 }, {
   toObject: {
     virtuals: true
@@ -46,9 +48,10 @@ graphSchema.pre('save', function (next) {
 
 graphSchema.method('print', function () {
   console.log(this.id)
-  for (let i = 0; i < this.size; i++) { // rows
+  // console.log(this.cartesian);
+  for (let i = 0; i < this.cartesian.length; i++) { // rows
     let s = ''
-    for (let j = 0; j < this.size; j++) {
+    for (let j = 0; j < this.cartesian[i].length; j++) {
       s += (this.cartesian[i][j] ? '◉ ' : '◯ ')
     }
     console.log(s)
@@ -103,16 +106,29 @@ graphSchema.method('saturate', function () {
 //   // this.print()
 // })
 
-graphSchema.method('fill', function (vectorFill) { // atomicVectors = [7, 11, 13]
-  if (vectorFill.length % 2 !== 0) {
-    console.log('Odd number length for atomicVectors')
-  }
+graphSchema.method('create', function () { // atomicVectors = [7, 11, 13]
+  console.log('create graph from ' + this.name);
+  const vectorFill = this.name.split(',')
+  // console.log(vectorFill);
+
+  this.vectors = []
   for (let i = 0; i < vectorFill.length; i++) {
     if (!Object.prototype.hasOwnProperty.call(atomicVectors, vectorFill[i])) {
       console.log('Unknown atomicVector ' + vectorFill[i])
+      return this
     }
     const v = atomicVectors[vectorFill[i]]
-    console.log(v);
+    if (v.length % 2 !== 0) {
+      console.log('Odd number length for atomicVectors')
+      return this
+    }
+    // const halfLength = v.length / 2 // string here
+    // console.log(v);
+    const vector = v.split('')
+    // vector.splice(halfLength, 0, '0')
+    const asBooleanVector = vector.map(c => c === '1')
+    // console.log(asBooleanVector);
+    this.vectors.push(asBooleanVector)
   }
   return this
 })

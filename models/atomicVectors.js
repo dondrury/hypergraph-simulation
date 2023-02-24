@@ -1,6 +1,6 @@
 const atomicVectors = {}
 const allVectors = {}
-let scale = 5
+const scale = 4 // must be even
 /*
 {
    vectors: [
@@ -51,7 +51,7 @@ function createAtomicVectors (vectors, asString, exitLength) {
   if (vectors.asBooleanVector.length === exitLength) {
     return
   }
-  for (let i = 0; i < vectors.asBooleanVector.length; i++) { // 0 to n
+  for (let i = 0; i < vectors.asBooleanVector.length + 1; i++) { // 0 to n
     const _asBooleanVector = JSON.parse(JSON.stringify(vectors.asBooleanVector))
     // console.log(_asBooleanVector);
     _asBooleanVector.splice(i, 0, false)
@@ -73,7 +73,11 @@ function createAtomicVectors (vectors, asString, exitLength) {
 }
 
 exports.scale = function (requestedScale) {
-  scale = requestedScale
+  if (requestedScale % 2 !== 0) {
+    console.log('Scale of atomicVectors must be an even number')
+  } else {
+    scale = requestedScale
+  }
 }
 
 exports.all = function () {
