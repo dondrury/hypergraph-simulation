@@ -1,6 +1,6 @@
 const atomicVectors = {}
 const allVectors = {}
-const scale = 4 // must be even
+const scale = 6 // must be even
 /*
 {
    vectors: [
@@ -78,6 +78,10 @@ exports.scale = function (requestedScale) {
   } else {
     scale = requestedScale
   }
+}
+
+exports.getScale = function () {
+  return scale
 }
 
 exports.all = function () {

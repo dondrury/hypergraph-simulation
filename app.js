@@ -51,13 +51,11 @@ mongoose.connection.on('error', () => {
 app.set('views', 'views')
 app.set('view engine', 'ejs')
 app.enable('strict routing')
-app.get('/', (req, res) => { // if page is left unspecified, this will direct to 404
-  res.render('layout', { title: 'Home', view: 'home' })
-})
+app.get('/', graphController.home)
 app.get('/graph/byId', graphController.getGraph)
 app.get('/graph/new', graphController.newGraph)
 app.get('/graph/:id', graphController.getGraph)
-app.get('/graph/next/:id', graphController.nextGraph)
+// app.get('/graph/next/:id', graphController.nextGraph)
 
 const publicServeOptions = {
   dotfiles: 'ignore',

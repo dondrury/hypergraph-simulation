@@ -1,14 +1,52 @@
-<% const scale = 20
+<% const scale = 22
+
+ let _vectors = JSON.parse(JSON.stringify(graph.vectors))
+ const _vectors2  = JSON.parse(JSON.stringify(graph.vectors))
 
 
+ let vectors = _vectors.concat(_vectors2) // jeez
+
+ const atomicVectorNumbers = vectors.map(v => parseInt(v.map(b => b ? '1' : '0').join(''), 2))
+ // console.log(atomicVectorNumbers);
+ vectors = vectors.map(v => {
+   v.unshift(false)
+   v.unshift(false)
+   v.push(false)
+   v.push(false)
+   return v
+ })
+ // console.log(vectors);
+ // console.log(vectors);
+ let totalVectorsLength = 0
+ for (var i = 0; i < vectors.length; i++) {
+   totalVectorsLength += vectors[i].length
+ }
+ const averageVectorLength = totalVectorsLength / vectors.length
+ // console.log({ averageVectorLength });
+ // const yOffsetFromTop = scale * vectors.length
+ const graphWidth = (vectors.length + 2) * scale * 2 + averageVectorLength
 %>
 <div class="svg-graph">
-  <svg width="<%= graph.size * scale %>" height="<%= graph.size * scale %>" >
-    <% for (var i = 0; i < graph.size; i++) {
+  <svg width="<%= graphWidth %>" height="<%=vectors.length * scale * 2 %>" >
+    <% for (var i = 0; i < vectors.length; i++) {
+      const halfWidth = vectors[i].length / 2
+      vectors[i].splice(halfWidth, 0, false)
+      const indexShown = i - vectors.length / 2
        %>
-        <% for (var j = 0; j < graph.size; j++) { %>
-          <rect x="<%= j * scale %>" y="<%= i * scale %>" width="<%= scale %>" height="<%= scale %>" style="fill:<%= graph.cartesian[i][j] ? 'black' : 'white' %>;stroke:black;stroke-width:1;" />
+        <% for (var j = 0; j < vectors[i].length; j++) {
+          const rectFill = vectors[i][j] === true ? ' #b9b9b9 ' : 'white'
+          const dotDisplay = j === vectors[i].length - 3 ? 'block' : 'none'
+          %>
+          <g>
+            <g>
+              <rect x="<%= scale * (i + j + 5 - halfWidth) %>" y="<%= i * scale  %>" width="<%= scale %>" height="<%= scale %>" style="fill:<%= rectFill %>;stroke:black;stroke-width:1;" />
+              <circle cx="<%= scale * (i + j + 5.5 - halfWidth) %>" cy="<%= (i + 0.5) * scale  %>" r="<%= 0.1* scale %>" stroke="black" fill="black" stroke-width="1" style="display: <%= dotDisplay %>"/>
+              <text x="<%= scale * (i + j + 5.2 - halfWidth) %>" y="<%= (i + 0.7 ) * scale  %>" font-family="Verdana" font-size="<%= scale * 0.4 %>" fill="black" style="display:<%= j === halfWidth ? 'block' : 'none'%>"><%= indexShown %><text>
+            </g>
+            <text x="<%= scale * (i + j + 0.2 - halfWidth) %>" y="<%= (i + 0.7 ) * scale  %>" font-family="Verdana" font-size="<%= scale * 0.4 %>" fill="black" style="display:<%= j === halfWidth ? 'block' : 'none'%>"><%= atomicVectorNumbers[i] %><text>
+          </g>
         <% } %>
+
     <% } %>
   </svg>
 </div>
