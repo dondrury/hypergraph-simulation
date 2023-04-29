@@ -1,6 +1,6 @@
 const atomicVectors = {}
 const allVectors = {}
-const scale = 6 // must be even
+const scale = 8 // must be even
 /*
 {
    vectors: [

@@ -55,6 +55,9 @@ app.get('/', graphController.home)
 app.get('/graph/byId', graphController.getGraph)
 app.get('/graph/new', graphController.newGraph)
 app.get('/graph/:id', graphController.getGraph)
+
+app.get('/plank-graph', graphController.getPlankGraph)
+
 // app.get('/graph/next/:id', graphController.nextGraph)
 
 const publicServeOptions = {

@@ -112,6 +112,7 @@ graphSchema.method('create', function () { // atomicVectors = [7, 11, 13]
   // console.log(vectorFill);
 
   this.vectors = []
+
   for (let i = 0; i < vectorFill.length; i++) {
     if (!Object.prototype.hasOwnProperty.call(atomicVectors, vectorFill[i])) {
       console.log('Unknown atomicVector ' + vectorFill[i])
@@ -129,6 +130,7 @@ graphSchema.method('create', function () { // atomicVectors = [7, 11, 13]
     const asBooleanVector = vector.map(c => c === '1')
     // console.log(asBooleanVector);
     this.vectors.push(asBooleanVector)
+    // const vectorToAddToCartesian = new Array(i).fill(false).concat(asBooleanVector)
   }
   return this
 })

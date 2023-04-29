@@ -68,3 +68,12 @@ exports.newGraph = (req, res) => {
 //     })
 //   })
 // }
+exports.getQuantumVectors = (req, res) => {
+  const scale = parseInt(req.query.scale || req.params.scale, 10)
+  return res.render('layout', { title: 'Quantum Vectors, scale=' + scale, view: 'quantum-vectors', scale })
+}
+
+exports.getPlankGraph = (req, res) => {
+  // const scale = parseInt(req.query.scale || req.params.scale, 10)
+  return res.render('layout', { title: 'Plank Graph', view: 'plank-graph' })
+}
