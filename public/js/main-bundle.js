@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
 var excessVectorPadding = 2;
 var NS = 'http://www.w3.org/2000/svg';
 // const padding = 20
-var layout = "\n<div class=\"pg-container\">\n  <h3 class=\"title\">Plank Graph of <span class=\"starting-vectors\"></span></h3>\n  <div class=\"svg-container\"></div>\n  <style>\n    .pg-container svg circle{\n      fill: white;\n    }\n    .pg-container svg circle.filled{\n      fill: black;\n    }\n  </style>\n</div>\n";
+var layout = "\n<div class=\"pg-container\">\n  <h3 class=\"title\">Plank Graph starting at (<span class=\"starting-vectors\"></span>)</h3>\n  <div class=\"svg-container\"></div>\n  <style>\n    .pg-container svg.plank circle{\n      fill: white;\n      stroke: black;\n      stroke-width: 1px;\n    }\n\n    .pg-container svg.plank circle.matrix-element:hover {\n      stroke: red;\n    }\n    .pg-container svg.plank circle.filled{\n      fill: black;\n    }\n\n    .pg-container svg.plank circle.origin-circle {\n      fill: #ff9191;\n      stroke-width: 1px;\n    }\n    .pg-container svg.plank circle.origin-circle.compliant {\n      fill: #9aff91;\n    }\n  </style>\n</div>\n";
 function init() {
   console.log('init');
   if (document.getElementsByClassName('plank-graph').length > 0) {
@@ -31,8 +31,8 @@ function createGraph(graphEl) {
   var b2Array = b10tob2Array(b10Array, excessVectorPadding);
   var scale = b2Array[0].length;
   // console.log('scale', scale)
-  var matrix = createNewMatrix(scale + 1);
-  console.log(matrix);
+  // var matrix = createNewMatrix(scale + b2Array.length)
+  // console.log(matrix)
   var vectorCount = b2Array.length;
   console.log('b2Array', b2Array);
   var svg = document.createElementNS(NS, 'svg');
@@ -48,6 +48,7 @@ function createGraph(graphEl) {
   svg.style.height = height + 'px';
   svg.style.width = width + 'px';
   svg.style.backgroundColor = '#d3d3d333';
+  svg.classList.add('plank');
   var svgContainer = graphEl.querySelector('div.svg-container');
   svgContainer.appendChild(svg);
   addSolidLine(svg, 0, 0, width, 0); // main diagonal
@@ -57,24 +58,25 @@ function createGraph(graphEl) {
     addSolidLine(svg, i * increment, 0, (i + scale) * increment, -scale * increment); // solid guide line
     addDashedLine(svg, i * increment, 0, (i - scale) * increment, +scale * increment); // dashed guide line
     addDashedLine(svg, i * increment, 0, (i - scale) * increment, -scale * increment); // dashed guide line
-    addOriginCircle(svg, i * increment, 0, i); // origins on diagonal
   }
 
   for (var _i = 0; _i < vectorCount; _i++) {
     addVectorCircles(svg, _i); // important dots
+    addOriginCircle(svg, _i * increment, 0, _i); // origins on diagonal
+    updateOriginCircle(_i);
   }
-
   function createNewMatrix(size) {
     var temp = new Array(size);
     for (var _i2 = 0; _i2 < size; _i2++) {
       temp[_i2] = new Array(size).fill(false);
     }
+    console.log(temp);
     return temp;
   }
-  function updateMatrix(i, j, val) {
-    console.log('update ', i, j);
+  function updateMatrix(y, x, val) {
+    // console.log('update ', y, x)
     try {
-      matrix[i][j] = val;
+      matrix[y][x] = val;
     } catch (e) {
       // no worries it may not be there
     }
@@ -93,8 +95,6 @@ function createGraph(graphEl) {
       topCircle.setAttribute('cy', yOffset((j + 1) * increment / 2));
       topCircle.setAttribute('r', circleRadius);
       topCircle.id = 'matrix-element-' + i + '-' + (j + i + 1);
-      topCircle.style = 'stroke-width:1;stroke:black';
-      // topCircle.setAttribute('fill', vector[j] === '1' ? 'black' : 'white')
       topCircle.classList.add('matrix-element');
       svg.appendChild(topCircle);
       // bottom circles
@@ -104,19 +104,34 @@ function createGraph(graphEl) {
       bottomCircle.setAttribute('r', circleRadius);
       bottomCircle.id = 'matrix-element-' + (j + i + 1) + '-' + i;
       bottomCircle.classList.add('matrix-element');
-      bottomCircle.style = 'stroke-width:1;stroke:black';
-      // bottomCircle.setAttribute('fill',)
       if (vector[j] === '1') {
         bottomCircle.classList.add('filled');
         topCircle.classList.add('filled');
       }
       svg.appendChild(bottomCircle);
-      updateMatrix(i, i + j + 1, vector[j] === '1');
-      updateMatrix(i + j + 1, i, vector[j] === '1');
       // add user interaction
+      addUserInteraction(topCircle, i, j);
+      addUserInteraction(bottomCircle, i, j);
+    }
+    function addUserInteraction(circle, i, j) {
+      circle.addEventListener('click', function (event) {
+        this.classList.toggle('filled');
+        var filled = this.classList.contains('filled');
+        var idStringArray = this.id.split('-');
+        var x = parseInt(idStringArray[2], 10);
+        var y = parseInt(idStringArray[3], 10);
+        if (filled) {
+          document.getElementById('matrix-element-' + x + '-' + y).classList.add('filled');
+          document.getElementById('matrix-element-' + y + '-' + x).classList.add('filled');
+        } else {
+          document.getElementById('matrix-element-' + x + '-' + y).classList.remove('filled');
+          document.getElementById('matrix-element-' + y + '-' + x).classList.remove('filled');
+        }
+        updateOriginCircle(x);
+        updateOriginCircle(y);
+      });
     }
   }
-
   function addOriginCircle(svg, x, y, i) {
     // in offset coordinates
     var circle = document.createElementNS(NS, 'circle');
@@ -125,7 +140,8 @@ function createGraph(graphEl) {
     circle.setAttribute('r', circleRadius);
     circle.id = 'matrix-element-' + i + '-' + i;
     circle.setAttribute('stroke', 'black');
-    circle.style = 'fill:white;stroke-width:1;';
+    circle.style = '';
+    circle.classList.add('origin-circle');
     svg.appendChild(circle);
     var text = document.createElementNS(NS, 'text');
     text.textContent = i;
@@ -138,11 +154,28 @@ function createGraph(graphEl) {
     text.setAttribute('dx', (1 - digits) * circleRadius / 3);
     text.setAttribute('y', yOffset(y) + circleRadius / 3);
     text.id = 'matrix-element-label-' + i + '-' + i;
-    // text.setAttributeNS(NS, 'text-anchor', 'middle')
     svg.appendChild(text);
-    // svg.appendChild(g)
   }
-
+  function updateOriginCircle(x) {
+    // use mod to wrap around to front, straight from the DOM
+    // x can be the row, it really doesn't matter which
+    var rowCount = 0;
+    for (var j = 0; j < scale * 2; j++) {
+      // console.log({j})
+      // const filled = document.getElementById('matrix-element-' + (x % vectorCount) + '-' + (j % vectorCount)).classList.contains('filled')
+      // console.log(x % vectorCount, j % vectorCount)
+      var element = document.getElementById('matrix-element-' + x % vectorCount + '-' + j % vectorCount);
+      if (element && element.classList.contains('filled')) rowCount++;
+    }
+    if (rowCount === 3) {
+      document.getElementById('matrix-element-' + x + '-' + x).classList.add('compliant');
+    } else {
+      document.getElementById('matrix-element-' + x + '-' + x).classList.remove('compliant');
+    }
+    console.log({
+      rowCount: rowCount
+    });
+  }
   function addSolidLine(svg, x1, y1, x2, y2) {
     // in offset coordinates
     var line = document.createElementNS(NS, 'line');
@@ -151,7 +184,7 @@ function createGraph(graphEl) {
     line.setAttribute('x2', xOffset(x2));
     line.setAttribute('y2', yOffset(y2));
     line.setAttribute('stroke', 'black');
-    line.classList.add('solid-guidline');
+    line.classList.add('solid-guideline');
     svg.appendChild(line);
   }
   function addDashedLine(svg, x1, y1, x2, y2) {
@@ -163,7 +196,7 @@ function createGraph(graphEl) {
     line.setAttribute('y2', yOffset(y2));
     line.setAttribute('stroke', 'black');
     line.setAttribute('stroke-dasharray', '2');
-    line.classList.add('dashed-guidline');
+    line.classList.add('dashed-guideline');
     svg.appendChild(line);
   }
 }
