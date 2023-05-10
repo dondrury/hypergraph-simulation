@@ -1,9 +1,9 @@
 const Graph = require('../models/graph')
-const atomicVectorsModel = require('../models/atomicVectors')
-const atomicVectors = atomicVectorsModel.all()
+// const atomicVectorsModel = require('../models/atomicVectors')
+// const atomicVectors = atomicVectorsModel.all()
 
 exports.home = (req, res) => {
-  return res.render('layout', { title: 'Home', view: 'home', atomicVectors, scale: atomicVectorsModel.getScale() })
+  return res.render('layout', { title: 'Home', view: 'home'})
 }
 
 exports.getGraph = (req, res) => {
@@ -25,22 +25,22 @@ exports.getGraph = (req, res) => {
   })
 }
 
-exports.newGraph = (req, res) => {
-  const graph = new Graph({ name: '42,42,42,42,42,42,42,42,42' })
-  // graph.fillFalse()
-  //
-  // graph.saturate()
-  graph.create()
-  // graph.fill([7, 11, 13])
-  graph.print()
-  graph.save((err, g) => {
-    if (err) {
-      console.log(err)
-      return
-    }
-    return res.render('layout', { title: 'Graph View ' + g.id, view: 'graph', graph })
-  })
-}
+// exports.newGraph = (req, res) => {
+//   const graph = new Graph({ name: '42,42,42,42,42,42,42,42,42' })
+//   // graph.fillFalse()
+//   //
+//   // graph.saturate()
+//   graph.create()
+//   // graph.fill([7, 11, 13])
+//   graph.print()
+//   graph.save((err, g) => {
+//     if (err) {
+//       console.log(err)
+//       return
+//     }
+//     return res.render('layout', { title: 'Graph View ' + g.id, view: 'graph', graph })
+//   })
+// }
 
 // exports.nextGraph = (req, res) => {
 //   const id = req.query.id || req.params.id

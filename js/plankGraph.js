@@ -1,9 +1,9 @@
-const excessVectorPadding = 2
+const excessVectorPadding = 4
 const NS = 'http://www.w3.org/2000/svg'
 // const padding = 20
 const layout = `
 <div class="pg-container">
-  <h3 class="title">Plank Graph starting at (<span class="starting-vectors"></span>)</h3>
+  <h3 class="title">Plank Graph of: (<span class="starting-vectors"></span>)</h3>
   <div class="svg-container"></div>
   <style>
     .pg-container svg.plank circle{
@@ -19,13 +19,7 @@ const layout = `
       fill: black;
     }
 
-    .pg-container svg.plank circle.origin-circle {
-      fill: #ff9191;
-      stroke-width: 1px;
-    }
-    .pg-container svg.plank circle.origin-circle.compliant {
-      fill: #9aff91;
-    }
+    
   </style>
 </div>
 `
@@ -43,6 +37,7 @@ function createGraph (graphEl) { // in standard cartesian coordinates
   const increment = circleRadius * 4
   // console.log('create graph')
   const b10Array = sanitizeInputNumbers(graphEl.dataset.starting)
+  const b10ArrayAfter = Object.assign([], b10Array)
   graphEl.querySelector('span.starting-vectors').innerText = graphEl.dataset.starting
   const b2Array = b10tob2Array(b10Array, excessVectorPadding)
   const scale = b2Array[0].length
@@ -75,26 +70,8 @@ function createGraph (graphEl) { // in standard cartesian coordinates
   for (let i = 0; i < vectorCount; i++) {
     addVectorCircles(svg, i) // important dots
     addOriginCircle(svg, i * increment, 0, i) // origins on diagonal
-    updateOriginCircle(i)
   }
-
-  function createNewMatrix(size) {
-    let temp = new Array(size)
-    for (let i = 0; i < size; i++) {
-      temp[i] = new Array(size).fill(false)
-    }
-    console.log(temp)
-    return temp
-  }
-
-  function updateMatrix(y, x, val) {
-    // console.log('update ', y, x)
-    try {
-      matrix[y][x] = val
-    } catch (e) {
-      // no worries it may not be there
-    }
-  }
+ 
 
   // end main createGraph body
 
@@ -109,6 +86,8 @@ function createGraph (graphEl) { // in standard cartesian coordinates
       topCircle.setAttribute('r', circleRadius)
       topCircle.id = 'matrix-element-' + i + '-' +  (j + i + 1)
       topCircle.classList.add('matrix-element')
+      topCircle.dataset.vectorNumber = i 
+      topCircle.dataset.vectorElement = j
       svg.appendChild(topCircle)
       // bottom circles
       const bottomCircle = document.createElementNS(NS,'circle')
@@ -123,13 +102,17 @@ function createGraph (graphEl) { // in standard cartesian coordinates
         topCircle.classList.add('filled')
       }
       svg.appendChild(bottomCircle)
+      console.log('graphEl', graphEl)
+      // 
       // add user interaction
       addUserInteraction(topCircle, i, j)
       addUserInteraction(bottomCircle, i, j)
+      
     }
 
     function addUserInteraction (circle, i, j) {
       circle.addEventListener('click', function (event) {
+        if (graphEl.getAttribute('readonly') === 'true') return
         this.classList.toggle('filled')
         const filled = this.classList.contains('filled')
         const idStringArray = this.id.split('-')
@@ -142,10 +125,32 @@ function createGraph (graphEl) { // in standard cartesian coordinates
           document.getElementById('matrix-element-' + x + '-' + y).classList.remove('filled')
           document.getElementById('matrix-element-' + y + '-' + x).classList.remove('filled')
         }
-        updateOriginCircle(x)
-        updateOriginCircle(y)
+        // update Vectors List
+        
+        const vEls = document.querySelectorAll('[data-vector-number="' + i + '"]')
+        // console.log(vEls)
+        let vector = []
+        vEls.forEach(el => {
+          vector.push(el.classList.contains('filled'))
+        })
+        console.log('vector', vector)
+        const stringRepresentation = vector.map(el => el ? '1' : '0').reverse().join('')
+        const number = parseInt(stringRepresentation, 2)
+        console.log('string representation', stringRepresentation, number)
+        
+        b10ArrayAfter[i] = number
+        console.log('b10ArrayAfter', b10ArrayAfter)
+        graphEl.querySelector('span.starting-vectors').innerText = b10ArrayAfter
       })
     }
+
+    // function updateVectorsList (circle, i, j) {
+    //   circle.addEventListener('click', function (event) {
+    //     // console.log('updateVectorsList', i, j)
+       
+    //   })
+    // }
+
   }
 
   function addOriginCircle (svg, x, y, i) { // in offset coordinates
@@ -170,24 +175,6 @@ function createGraph (graphEl) { // in standard cartesian coordinates
     text.setAttribute('y', yOffset(y) + circleRadius / 3)
     text.id = 'matrix-element-label-' + i + '-' + i
     svg.appendChild(text)
-  }
-
-  function updateOriginCircle (x) { // use mod to wrap around to front, straight from the DOM
-   // x can be the row, it really doesn't matter which
-   let rowCount = 0
-   for(let j = 0; j < scale * 2 ; j++) {
-    // console.log({j})
-    // const filled = document.getElementById('matrix-element-' + (x % vectorCount) + '-' + (j % vectorCount)).classList.contains('filled')
-    // console.log(x % vectorCount, j % vectorCount)
-    const element = document.getElementById('matrix-element-' + (x % vectorCount) + '-' + (j % vectorCount))
-    if (element && element.classList.contains('filled')) rowCount++
-   }
-   if (rowCount === 3) {
-    document.getElementById('matrix-element-' + x + '-' + x).classList.add('compliant')
-   } else {
-    document.getElementById('matrix-element-' + x + '-' + x).classList.remove('compliant')
-   }
-   console.log({rowCount})
   }
   
   function addSolidLine (svg, x1, y1, x2, y2) { // in offset coordinates

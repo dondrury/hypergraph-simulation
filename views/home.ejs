@@ -1,34 +1,7 @@
-<h2>All the Quantum Vectors at scale <%= scale %></h2>
-<% const keysArray = Object.keys(atomicVectors)
-const halfWidth = keysArray.length / 2
-const firstHalf = keysArray.slice(0, halfWidth)
-const secondHalf = keysArray.slice(halfWidth, keysArray.length)
 
 
-%>
-<div class="row">
-  <div class="col-md-6">
-    <div class="row">
-      <div class="col-xs-6">
-        <% for (let i = 0; i < firstHalf.length; i++) { %>
-          <div style="font-size:2rem;">
-            <span><%= firstHalf[i] %></span>
-            <span>#<%= atomicVectors[firstHalf[i]] %></span>
-          </div>
-        <% } %>
-      </div>
-      <div class="col-xs-6">
-        <% for (let i = secondHalf.length -1; i >= 0; i--) { %>
-          <div style="font-size:2rem;">
-            <span><%= secondHalf[i] %></span>
-            <span>#<%= atomicVectors[secondHalf[i]] %></span>
-          </div>
-        <% } %>
-      </div>
-    </div>
 
-  </div>
-  <div class="col-md-6">
-
-  </div>
+<div class="plank-graph" readonly="false" data-starting="2,6,2,6,2,6,2,6,2,6,2,6,2,6,2,6,2,6,2,6,2,6,2,6,2,6" data-radius="10" >
 </div>
+
+

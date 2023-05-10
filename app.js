@@ -4,7 +4,7 @@ const express = require('express')
 const chalk = require('chalk')
 const mongoose = require('mongoose')
 const graphController = require('./controllers/graph')
-const atomicVectors = require('./models/atomicVectors')
+// const atomicVectors = require('./models/atomicVectors')
 mongoose.set('strictQuery', true)
 const app = express()
 
@@ -14,7 +14,7 @@ let connector = {}
 var connected = false
 /* eslint-enable */
 // atomicVectors.scale(4)
-atomicVectors.init()
+// atomicVectors.init()
 connect()
 function connect () {
   mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true }, function (err, db) {
@@ -53,7 +53,7 @@ app.set('view engine', 'ejs')
 app.enable('strict routing')
 app.get('/', graphController.home)
 app.get('/graph/byId', graphController.getGraph)
-app.get('/graph/new', graphController.newGraph)
+// app.get('/graph/new', graphController.newGraph)
 app.get('/graph/:id', graphController.getGraph)
 
 app.get('/plank-graph', graphController.getPlankGraph)
