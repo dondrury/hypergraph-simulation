@@ -10,10 +10,11 @@ document.addEventListener('DOMContentLoaded', function () {
 },{"./plankGraph":2}],2:[function(require,module,exports){
 "use strict";
 
+var Library = require('../library');
 var excessVectorPadding = 6;
 var NS = 'http://www.w3.org/2000/svg';
 // const padding = 20
-var layout = "\n<div class=\"pg-container\">\n  <form action=\"/graph/save\" method=\"POST\">\n  <h3 class=\"title\">Plank Graph of: <span class=\"vector-string\"></span></h3>\n  <input type=\"text\" value=\"\" name=\"name\" hidden></input>\n  <a href=\"#\" class=\"view-graph\">Open as Interactive</a>\n  <div class=\"svg-container\"></div>\n  <div class=\"info\">\n    <button type=\"submit\" class=\"btn btn-success\" >Save Graph</button>\n  </div>\n  <style>\n    .pg-container svg.plank circle{\n      fill: white;\n      stroke: black;\n      stroke-width: 1px;\n    }\n\n    .pg-container h3 {\n      display: inline;\n    }\n\n    .pg-container a.view-graph {\n      margin-left: 20px;\n    }\n\n    .pg-container svg.plank circle.matrix-element:hover {\n      stroke: red;\n    }\n\n    .pg-container svg.plank circle.filled{\n      fill: black;\n    }\n\n    .pg-container input[name=\"name\"] {\n      width: 84rem;\n      border: none;\n    }\n\n    .pg-container button[type=\"submit\"] {\n      display: none;\n    }\n  </style>\n  </form>\n</div>\n";
+var layout = "\n<div class=\"pg-container\">\n  <form action=\"/graph/save\" method=\"POST\">\n  <h3 class=\"title\">Plank Graph of: <span class=\"vector-string\"></span></h3>\n  <input type=\"text\" value=\"\" name=\"name\" hidden></input>\n  <a href=\"#\" class=\"view-graph\">Open as Interactive</a>\n  <div class=\"svg-container\"></div>\n  <div class=\"info\">\n    <button type=\"submit\" class=\"btn btn-success\" >Save Graph</button>\n  </div>\n  <style>\n    .pg-container svg.plank circle{\n      fill: white;\n      stroke: black;\n      stroke-width: 1px;\n    }\n\n    .pg-container h3 {\n      display: inline;\n    }\n\n    .pg-container a.view-graph {\n      margin-left: 20px;\n    }\n\n    .pg-container svg.plank circle.matrix-element:hover {\n      stroke: red;\n    }\n\n    .pg-container svg circle.origin-circle.non-compliant {\n      fill: #ff7575;\n    }\n\n    .pg-container svg circle.origin-circle.compliant {\n      fill: #5abf5a;\n    }\n\n\n    .pg-container svg.plank circle.filled{\n      fill: black;\n    }\n\n    .pg-container input[name=\"name\"] {\n      width: 84rem;\n      border: none;\n    }\n\n    .pg-container button[type=\"submit\"] {\n      display: none;\n    }\n  </style>\n  </form>\n</div>\n";
 function init() {
   console.log('init');
   if (document.getElementsByClassName('plank-graph').length > 0) {
@@ -26,7 +27,7 @@ function createGraph(graphEl) {
   var circleRadius = graphEl.dataset.radius ? parseInt(graphEl.dataset.radius, 10) : 12; // default to 12
   var increment = circleRadius * 4;
   // console.log('create graph')
-  var b10Array = sanitizeInputNumbers(graphEl.dataset.starting);
+  var b10Array = Library.vectorStringToBase10Array(graphEl.dataset.starting);
   var b10ArrayAfter = Object.assign([], b10Array);
   // graphEl.querySelector('span.starting-vectors').innerText = graphEl.dataset.starting
   var inputNameEl = graphEl.querySelector('input[name="name"]');
@@ -38,7 +39,7 @@ function createGraph(graphEl) {
     graphEl.querySelector('button[type="submit"]').style.display = 'block';
   }
   var href = graphEl.querySelector('a').setAttribute('href', '/graph/byId?name=' + encodeURIComponent(b10Array.join(',')));
-  var b2Array = b10tob2Array(b10Array, excessVectorPadding);
+  var b2Array = Library.base10ArrayToBase2Array(b10Array, excessVectorPadding);
   var scale = b2Array[0].length;
   // console.log('scale', scale)
   // var matrix = createNewMatrix(scale + b2Array.length)
@@ -71,8 +72,16 @@ function createGraph(graphEl) {
   }
 
   for (var _i = 0; _i < vectorCount; _i++) {
-    addVectorCircles(svg, _i); // important dots
     addOriginCircle(svg, _i * increment, 0, _i); // origins on diagonal
+  }
+
+  for (var _i2 = 0; _i2 < vectorCount; _i2++) {
+    addVectorCircles(svg, _i2); // important dots
+  }
+
+  if (graphEl.getAttribute('readonly') === 'false') {
+    var complianceVector = Library.validateVectorString(graphEl.dataset.starting);
+    applyComplianceVector(svg, complianceVector);
   }
 
   // end main createGraph body
@@ -107,46 +116,70 @@ function createGraph(graphEl) {
       // console.log('graphEl', graphEl)
       // 
       // add user interaction
-      addUserInteraction(topCircle, i, j);
-      addUserInteraction(bottomCircle, i, j);
+      if (graphEl.getAttribute('readonly') === 'false') {
+        addUserInteraction(topCircle, i, svg);
+        addUserInteraction(bottomCircle, i, svg);
+      }
     }
-    function addUserInteraction(circle, i, j) {
-      circle.addEventListener('click', function (event) {
-        if (graphEl.getAttribute('readonly') === 'true') return;
-        this.classList.toggle('filled');
-        var filled = this.classList.contains('filled');
-        var idStringArray = this.id.split('-');
-        var x = parseInt(idStringArray[2], 10);
-        var y = parseInt(idStringArray[3], 10);
-        if (filled) {
-          document.getElementById('matrix-element-' + x + '-' + y).classList.add('filled');
-          document.getElementById('matrix-element-' + y + '-' + x).classList.add('filled');
-        } else {
-          document.getElementById('matrix-element-' + x + '-' + y).classList.remove('filled');
-          document.getElementById('matrix-element-' + y + '-' + x).classList.remove('filled');
-        }
-        // update Vectors List
+  }
+  function addUserInteraction(circle, i, svg) {
+    circle.addEventListener('click', function (event) {
+      // left click
+      if (graphEl.getAttribute('readonly') === 'true') return;
+      this.classList.toggle('filled');
+      var filled = this.classList.contains('filled');
+      var idStringArray = this.id.split('-');
+      var x = parseInt(idStringArray[2], 10);
+      var y = parseInt(idStringArray[3], 10);
+      if (filled) {
+        document.getElementById('matrix-element-' + x + '-' + y).classList.add('filled');
+        document.getElementById('matrix-element-' + y + '-' + x).classList.add('filled');
+      } else {
+        document.getElementById('matrix-element-' + x + '-' + y).classList.remove('filled');
+        document.getElementById('matrix-element-' + y + '-' + x).classList.remove('filled');
+      }
+      // update Vectors List
 
-        var vEls = document.querySelectorAll('[data-vector-number="' + i + '"]');
-        // console.log(vEls)
-        var vector = [];
-        vEls.forEach(function (el) {
-          vector.push(el.classList.contains('filled'));
-        });
-        // console.log('vector', vector)
-        var stringRepresentation = vector.map(function (el) {
-          return el ? '1' : '0';
-        }).reverse().join('');
-        var number = parseInt(stringRepresentation, 2);
-        // console.log('string representation', stringRepresentation, number)
-
-        b10ArrayAfter[i] = number;
-        // console.log('b10ArrayAfter', b10ArrayAfter)
-        // graphEl.querySelector('span.starting-vectors').innerText = b10ArrayAfter
-        graphEl.querySelector('input[name="name"]').value = b10ArrayAfter;
-        graphEl.querySelector('span.vector-string').textContent = b10ArrayAfter;
+      var vEls = document.querySelectorAll('[data-vector-number="' + i + '"]');
+      // console.log(vEls)
+      var vector = [];
+      vEls.forEach(function (el) {
+        vector.push(el.classList.contains('filled'));
       });
+      // console.log('vector', vector)
+      var stringRepresentation = vector.map(function (el) {
+        return el ? '1' : '0';
+      }).reverse().join('');
+      var number = parseInt(stringRepresentation, 2);
+      // console.log('string representation', stringRepresentation, number)
+
+      b10ArrayAfter[i] = number;
+      // console.log('b10ArrayAfter', b10ArrayAfter)
+      // graphEl.querySelector('span.starting-vectors').innerText = b10ArrayAfter
+      var vectorString = b10ArrayAfter.join(',');
+      graphEl.querySelector('input[name="name"]').value = vectorString;
+      graphEl.querySelector('span.vector-string').textContent = vectorString;
+      var complianceVector = Library.validateVectorString(vectorString);
+      applyComplianceVector(svg, complianceVector);
+    });
+  }
+  function applyComplianceVector(svg, complianceVector) {
+    if (complianceVector.length !== b2Array.length) {
+      console.log('applyComplianceVector found to be the incorrect length');
+      return;
     }
+    complianceVector.forEach(function (element, i) {
+      var originCircle = svg.getElementById('matrix-element-' + i + '-' + i);
+      if (element === true) {
+        originCircle.classList.remove('compliant');
+        originCircle.classList.remove('non-compliant');
+        originCircle.classList.add('compliant');
+      } else {
+        originCircle.classList.remove('non-compliant');
+        originCircle.classList.remove('compliant');
+        originCircle.classList.add('non-compliant');
+      }
+    });
   }
   function addOriginCircle(svg, x, y, i) {
     // in offset coordinates
@@ -196,7 +229,41 @@ function createGraph(graphEl) {
     svg.appendChild(line);
   }
 }
-function sanitizeInputNumbers(nums) {
+module.exports = init;
+
+},{"../library":3}],3:[function(require,module,exports){
+"use strict";
+
+exports.validateVectorString = function (vectorString) {
+  // console.log(vectorString)
+  var base10Array = vectorStringToBase10Array(vectorString);
+  var base2Array = base10ArrayToBase2Array(base10Array, 0);
+  // console.log('base2Array', base2Array)
+  //  each vector still in reverse order and still a string base 2
+  var vectors = base2Array.map(function (vectorString) {
+    var inGraphOrderArray = vectorString.split('').reverse();
+    inGraphOrderArray.unshift('0');
+    return inGraphOrderArray.join('');
+  });
+  console.log('vectors', vectors); // example [ "1101", "1101", "0000", "1001", "0010", "0010", "1010", "0000", "1000", "0000", … ]
+  var resultsArray = [];
+  for (var j = 0; j < vectors.length; j++) {
+    // j is the "row" or number of vector
+    var count = 0;
+    console.log('j', j);
+    for (var i = 0; i < vectors[j].length; i++) {
+      if (vectors[j][i] === '1') count++;
+      console.log('rightwardVectorIndes', j, i);
+      var leftwardVector = (vectors.length + j - i) % vectors.length;
+      console.log('leftwardVectorIndeces', leftwardVector, i);
+      if (vectors[leftwardVector][i] === '1') count++;
+    }
+    resultsArray.push(count === 3);
+  }
+  console.log('resultsArray', resultsArray);
+  return resultsArray;
+};
+function vectorStringToBase10Array(nums) {
   if (typeof nums !== 'string') {
     console.log('array of input numbers should be a string');
     return;
@@ -215,7 +282,8 @@ function sanitizeInputNumbers(nums) {
   // console.log('b10Array', b10Array)
   return b10Array;
 }
-function b10tob2Array(b10Array, padding) {
+exports.vectorStringToBase10Array = vectorStringToBase10Array;
+function base10ArrayToBase2Array(b10Array, padding) {
   var maxScale = 0;
   var b2Array = b10Array.map(function (num) {
     var binaryString = num.toString(2);
@@ -229,6 +297,6 @@ function b10tob2Array(b10Array, padding) {
   });
   return b2Array;
 }
-module.exports = init;
+exports.base10ArrayToBase2Array = base10ArrayToBase2Array;
 
 },{}]},{},[1]);

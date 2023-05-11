@@ -1,3 +1,4 @@
+const Library = require('../library')
 const excessVectorPadding = 6
 const NS = 'http://www.w3.org/2000/svg'
 // const padding = 20
@@ -30,6 +31,15 @@ const layout = `
       stroke: red;
     }
 
+    .pg-container svg circle.origin-circle.non-compliant {
+      fill: #ff7575;
+    }
+
+    .pg-container svg circle.origin-circle.compliant {
+      fill: #5abf5a;
+    }
+
+
     .pg-container svg.plank circle.filled{
       fill: black;
     }
@@ -59,7 +69,7 @@ function createGraph (graphEl) { // in standard cartesian coordinates
   const circleRadius = graphEl.dataset.radius ? parseInt(graphEl.dataset.radius, 10) : 12 // default to 12
   const increment = circleRadius * 4
   // console.log('create graph')
-  const b10Array = sanitizeInputNumbers(graphEl.dataset.starting)
+  const b10Array = Library.vectorStringToBase10Array(graphEl.dataset.starting)
   const b10ArrayAfter = Object.assign([], b10Array)
   // graphEl.querySelector('span.starting-vectors').innerText = graphEl.dataset.starting
   const inputNameEl = graphEl.querySelector('input[name="name"]')
@@ -71,7 +81,7 @@ function createGraph (graphEl) { // in standard cartesian coordinates
     graphEl.querySelector('button[type="submit"]').style.display = 'block'
   }
   const href = graphEl.querySelector('a').setAttribute('href', '/graph/byId?name=' + encodeURIComponent(b10Array.join(',')))
-  const b2Array = b10tob2Array(b10Array, excessVectorPadding)
+  const b2Array = Library.base10ArrayToBase2Array(b10Array, excessVectorPadding)
   const scale = b2Array[0].length
   // console.log('scale', scale)
   // var matrix = createNewMatrix(scale + b2Array.length)
@@ -97,14 +107,19 @@ function createGraph (graphEl) { // in standard cartesian coordinates
     addSolidLine(svg, i * increment, 0, (i + scale) * increment, - scale * increment) // solid guide line
     addDashedLine(svg, i * increment, 0, (i - scale) * increment, + scale * increment) // dashed guide line
     addDashedLine(svg, i * increment, 0, (i - scale) * increment, - scale * increment) // dashed guide line
-    
+  }
+  for (let i = 0; i < vectorCount; i++) {
+    addOriginCircle(svg, i * increment, 0, i) // origins on diagonal
   }
   for (let i = 0; i < vectorCount; i++) {
     addVectorCircles(svg, i) // important dots
-    addOriginCircle(svg, i * increment, 0, i) // origins on diagonal
   }
+  if (graphEl.getAttribute('readonly') === 'false') {
+    const complianceVector = Library.validateVectorString(graphEl.dataset.starting)
+    applyComplianceVector(svg, complianceVector)
+  }
+  
  
-
   // end main createGraph body
 
   function addVectorCircles (svg, i) { // in offset coordinates, i is vector number
@@ -137,46 +152,70 @@ function createGraph (graphEl) { // in standard cartesian coordinates
       // console.log('graphEl', graphEl)
       // 
       // add user interaction
-      addUserInteraction(topCircle, i, j)
-      addUserInteraction(bottomCircle, i, j)
-      
+      if (graphEl.getAttribute('readonly') === 'false') {
+        addUserInteraction(topCircle, i, svg)
+        addUserInteraction(bottomCircle, i, svg)
+      }
     }
+  }
 
-    function addUserInteraction (circle, i, j) {
-      circle.addEventListener('click', function (event) {
-        if (graphEl.getAttribute('readonly') === 'true') return
-        this.classList.toggle('filled')
-        const filled = this.classList.contains('filled')
-        const idStringArray = this.id.split('-')
-        const x = parseInt(idStringArray[2], 10)
-        const y = parseInt(idStringArray[3], 10)
-        if (filled) {
-          document.getElementById('matrix-element-' + x + '-' + y).classList.add('filled')
-          document.getElementById('matrix-element-' + y + '-' + x).classList.add('filled')
-        } else {
-          document.getElementById('matrix-element-' + x + '-' + y).classList.remove('filled')
-          document.getElementById('matrix-element-' + y + '-' + x).classList.remove('filled')
-        }
-        // update Vectors List
-        
-        const vEls = document.querySelectorAll('[data-vector-number="' + i + '"]')
-        // console.log(vEls)
-        let vector = []
-        vEls.forEach(el => {
-          vector.push(el.classList.contains('filled'))
-        })
-        // console.log('vector', vector)
-        const stringRepresentation = vector.map(el => el ? '1' : '0').reverse().join('')
-        const number = parseInt(stringRepresentation, 2)
-        // console.log('string representation', stringRepresentation, number)
-        
-        b10ArrayAfter[i] = number
-        // console.log('b10ArrayAfter', b10ArrayAfter)
-        // graphEl.querySelector('span.starting-vectors').innerText = b10ArrayAfter
-        graphEl.querySelector('input[name="name"]').value = b10ArrayAfter
-        graphEl.querySelector('span.vector-string').textContent = b10ArrayAfter
+  function addUserInteraction (circle, i, svg) {
+    circle.addEventListener('click', function (event) { // left click
+      if (graphEl.getAttribute('readonly') === 'true') return
+      this.classList.toggle('filled')
+      const filled = this.classList.contains('filled')
+      const idStringArray = this.id.split('-')
+      const x = parseInt(idStringArray[2], 10)
+      const y = parseInt(idStringArray[3], 10)
+      if (filled) {
+        document.getElementById('matrix-element-' + x + '-' + y).classList.add('filled')
+        document.getElementById('matrix-element-' + y + '-' + x).classList.add('filled')
+      } else {
+        document.getElementById('matrix-element-' + x + '-' + y).classList.remove('filled')
+        document.getElementById('matrix-element-' + y + '-' + x).classList.remove('filled')
+      }
+      // update Vectors List
+      
+      const vEls = document.querySelectorAll('[data-vector-number="' + i + '"]')
+      // console.log(vEls)
+      let vector = []
+      vEls.forEach(el => {
+        vector.push(el.classList.contains('filled'))
       })
+      // console.log('vector', vector)
+      const stringRepresentation = vector.map(el => el ? '1' : '0').reverse().join('')
+      const number = parseInt(stringRepresentation, 2)
+      // console.log('string representation', stringRepresentation, number)
+      
+      b10ArrayAfter[i] = number
+      // console.log('b10ArrayAfter', b10ArrayAfter)
+      // graphEl.querySelector('span.starting-vectors').innerText = b10ArrayAfter
+      const vectorString = b10ArrayAfter.join(',')
+      graphEl.querySelector('input[name="name"]').value = vectorString
+      graphEl.querySelector('span.vector-string').textContent = vectorString
+      const complianceVector = Library.validateVectorString(vectorString)
+      applyComplianceVector(svg, complianceVector)
+    })  
+  }
+
+  function applyComplianceVector (svg, complianceVector) {
+    if (complianceVector.length !== b2Array.length) {
+      console.log('applyComplianceVector found to be the incorrect length')
+      return
     }
+    complianceVector.forEach((element, i) => {
+      const originCircle = svg.getElementById('matrix-element-' + i + '-' + i)
+      if (element === true) {
+        originCircle.classList.remove('compliant')
+        originCircle.classList.remove('non-compliant')
+        originCircle.classList.add('compliant')
+      } else {
+        originCircle.classList.remove('non-compliant')
+        originCircle.classList.remove('compliant') 
+        originCircle.classList.add('non-compliant')
+      }
+    })
+
   }
 
   function addOriginCircle (svg, x, y, i) { // in offset coordinates
@@ -225,45 +264,6 @@ function createGraph (graphEl) { // in standard cartesian coordinates
     line.classList.add('dashed-guideline')
     svg.appendChild(line)
   }
-}
-
-
-
-
-
-function sanitizeInputNumbers (nums) {
-  if (typeof nums !== 'string') {
-    console.log('array of input numbers should be a string')
-    return
-  }
-  const b10Array = []
-  nums.split(',').forEach(num => {
-    try {
-      const b10num = parseInt(num, 10)
-      // console.log(b10num)
-      if (isNaN(b10num)) throw new Error('not a number=' + num)
-      b10Array.push(b10num)
-    } catch (e) {
-      console.error(e)
-    }
-  })
-  // console.log('b10Array', b10Array)
-  return b10Array
-}
-
-function b10tob2Array (b10Array, padding) {
-  let maxScale = 0
-  let b2Array = b10Array.map(num => {
-    let binaryString = num.toString(2)
-    // console.log(num, binaryString)
-    if (binaryString.length > maxScale) maxScale = binaryString.length
-    return binaryString
-  })
-  // console.log('maxScale', maxScale)
-  b2Array = b2Array.map(b2numString => {
-    return b2numString.padStart(maxScale + padding, '0')
-  }) 
-  return b2Array
 }
 
 module.exports = init
