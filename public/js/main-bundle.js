@@ -14,7 +14,7 @@ var Library = require('../library');
 var excessVectorPadding = 6;
 var NS = 'http://www.w3.org/2000/svg';
 // const padding = 20
-var layout = "\n<div class=\"pg-container\">\n  <form action=\"/graph/save\" method=\"POST\">\n  <h3 class=\"title\">Plank Graph of: <span class=\"vector-string\"></span></h3>\n  <input type=\"text\" value=\"\" name=\"name\" hidden></input>\n  <a href=\"#\" class=\"view-graph\">Open as Interactive</a>\n  <div class=\"svg-container\"></div>\n  <div class=\"info\">\n    <button type=\"submit\" class=\"btn btn-success\" >Save Graph</button>\n  </div>\n  <style>\n    .pg-container svg.plank circle{\n      fill: white;\n      stroke: black;\n      stroke-width: 1px;\n    }\n\n    .pg-container h3 {\n      display: inline;\n    }\n\n    .pg-container a.view-graph {\n      margin-left: 20px;\n    }\n\n    .pg-container svg.plank circle.matrix-element:hover {\n      stroke: red;\n    }\n\n    .pg-container svg circle.origin-circle.non-compliant {\n      fill: #ff7575;\n    }\n\n    .pg-container svg circle.origin-circle.compliant {\n      fill: #5abf5a;\n    }\n\n\n    .pg-container svg.plank circle.filled{\n      fill: black;\n    }\n\n    .pg-container input[name=\"name\"] {\n      width: 84rem;\n      border: none;\n    }\n\n    .pg-container button[type=\"submit\"] {\n      display: none;\n    }\n  </style>\n  </form>\n</div>\n";
+var layout = "\n<div class=\"pg-container\">\n  <form action=\"/graph/save\" method=\"POST\">\n  <h3 class=\"title\">Plank Graph of: <span class=\"vector-string\"></span></h3>\n  <input type=\"text\" value=\"\" name=\"name\" hidden></input>\n  <a href=\"#\" class=\"view-interactive\">Open as Interactive</a>\n  <div class=\"svg-container\"></div>\n  <div class=\"info\">\n    <button type=\"submit\" class=\"btn btn-success\" >Save Graph</button>\n  </div>\n  <style>\n    .pg-container svg.plank circle{\n      fill: white;\n      stroke: black;\n      stroke-width: 1px;\n    }\n\n    .pg-container h3 {\n      display: inline;\n    }\n\n    .pg-container a.view-interactive {\n      margin-left: 20px;\n    }\n\n    .pg-container svg.plank circle.matrix-element:hover {\n      stroke: red;\n    }\n\n    .pg-container svg circle.origin-circle.non-compliant {\n      fill: #ff7575;\n    }\n\n    .pg-container svg circle.origin-circle.compliant {\n      fill: #5abf5a;\n    }\n\n\n    .pg-container svg.plank circle.filled{\n      fill: black;\n    }\n\n    .pg-container input[name=\"name\"] {\n      width: 84rem;\n      border: none;\n    }\n\n    .pg-container button[type=\"submit\"] {\n      display: none;\n    }\n  </style>\n  </form>\n</div>\n";
 function init() {
   console.log('init');
   if (document.getElementsByClassName('plank-graph').length > 0) {
@@ -37,6 +37,7 @@ function createGraph(graphEl) {
   if (graphEl.getAttribute('readonly') === 'false') {
     console.log('graph is interactive');
     graphEl.querySelector('button[type="submit"]').style.display = 'block';
+    graphEl.querySelector('a.view-interactive').style.display = 'none';
   }
   var href = graphEl.querySelector('a').setAttribute('href', '/graph/byId?name=' + encodeURIComponent(b10Array.join(',')));
   var b2Array = Library.base10ArrayToBase2Array(b10Array, excessVectorPadding);
@@ -245,7 +246,7 @@ exports.validateVectorString = function (vectorString) {
     inGraphOrderArray.unshift('0');
     return inGraphOrderArray.join('');
   });
-  console.log('vectors', vectors); // example [ "1101", "1101", "0000", "1001", "0010", "0010", "1010", "0000", "1000", "0000", … ]
+  // console.log('vectors', vectors) // example [ "1101", "1101", "0000", "1001", "0010", "0010", "1010", "0000", "1000", "0000", … ]
   var resultsArray = [];
   for (var j = 0; j < vectors.length; j++) {
     // j is the "row" or number of vector
@@ -253,9 +254,9 @@ exports.validateVectorString = function (vectorString) {
     console.log('j', j);
     for (var i = 0; i < vectors[j].length; i++) {
       if (vectors[j][i] === '1') count++;
-      console.log('rightwardVectorIndes', j, i);
+      // console.log('rightwardVectorIndes',j,i)
       var leftwardVector = (vectors.length + j - i) % vectors.length;
-      console.log('leftwardVectorIndeces', leftwardVector, i);
+      // console.log('leftwardVectorIndeces', leftwardVector, i)
       if (vectors[leftwardVector][i] === '1') count++;
     }
     resultsArray.push(count === 3);

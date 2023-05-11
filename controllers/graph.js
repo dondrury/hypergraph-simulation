@@ -41,3 +41,14 @@ exports.getAllGraphs = (req, res) => {
     return res.render('layout', { view: 'allGraphs', title:'All Graphs', graphs})
   })
 }
+
+exports.getGraphFromSubstring = (req, res) => {
+  if (typeof req.body.name != 'string' || req.body.name.length === 0) return
+  Graph.find({ name: { $regex: req.body.name }}).exec((err, graphs) => {
+    if (err) {
+      return res.render('layout', {view: 'error', error: err.msg })
+    }
+    // console.log('allGraphs', graphs)
+    return res.render('layout', { view: 'allGraphs', title:'Graphs including substring ' + req.body.name, graphs})
+  })
+}

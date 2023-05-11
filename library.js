@@ -9,21 +9,21 @@ exports.validateVectorString = function(vectorString) {
     inGraphOrderArray.unshift('0')
     return inGraphOrderArray.join('')
   })
-  console.log('vectors', vectors) // example [ "1101", "1101", "0000", "1001", "0010", "0010", "1010", "0000", "1000", "0000", … ]
+  // console.log('vectors', vectors) // example [ "1101", "1101", "0000", "1001", "0010", "0010", "1010", "0000", "1000", "0000", … ]
   let resultsArray = []
   for(let j = 0; j < vectors.length; j++) { // j is the "row" or number of vector
     let count = 0
-    console.log('j', j)
+    // console.log('j', j)
     for(let i = 0; i < vectors[j].length; i++) {
       if (vectors[j][i] === '1') count++
-      console.log('rightwardVectorIndes',j,i)
+      // console.log('rightwardVectorIndes',j,i)
       const leftwardVector = (vectors.length + j - i) % (vectors.length)
-      console.log('leftwardVectorIndeces', leftwardVector, i)
+      // console.log('leftwardVectorIndeces', leftwardVector, i)
       if (vectors[leftwardVector][i] === '1') count++
     }
     resultsArray.push(count === 3)
   }
-  console.log('resultsArray', resultsArray)
+  // console.log('resultsArray', resultsArray)
   return resultsArray
 }
 

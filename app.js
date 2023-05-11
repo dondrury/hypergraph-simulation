@@ -59,6 +59,7 @@ app.get('/graph/byId', graphController.getGraph)
 app.get('/graph/new', graphController.newGraph)
 app.get('/graph/all', graphController.getAllGraphs)
 app.post('/graph/save', graphController.saveGraph)
+app.post('/graph/bySubstring', graphController.getGraphFromSubstring)
 
 const publicServeOptions = {
   dotfiles: 'ignore',

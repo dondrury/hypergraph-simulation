@@ -7,7 +7,7 @@ const layout = `
   <form action="/graph/save" method="POST">
   <h3 class="title">Plank Graph of: <span class="vector-string"></span></h3>
   <input type="text" value="" name="name" hidden></input>
-  <a href="#" class="view-graph">Open as Interactive</a>
+  <a href="#" class="view-interactive">Open as Interactive</a>
   <div class="svg-container"></div>
   <div class="info">
     <button type="submit" class="btn btn-success" >Save Graph</button>
@@ -23,7 +23,7 @@ const layout = `
       display: inline;
     }
 
-    .pg-container a.view-graph {
+    .pg-container a.view-interactive {
       margin-left: 20px;
     }
 
@@ -79,6 +79,7 @@ function createGraph (graphEl) { // in standard cartesian coordinates
   if (graphEl.getAttribute('readonly') === 'false') {
     console.log('graph is interactive')
     graphEl.querySelector('button[type="submit"]').style.display = 'block'
+    graphEl.querySelector('a.view-interactive').style.display = 'none'
   }
   const href = graphEl.querySelector('a').setAttribute('href', '/graph/byId?name=' + encodeURIComponent(b10Array.join(',')))
   const b2Array = Library.base10ArrayToBase2Array(b10Array, excessVectorPadding)
