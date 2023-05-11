@@ -1,10 +1,16 @@
-const excessVectorPadding = 4
+const excessVectorPadding = 6
 const NS = 'http://www.w3.org/2000/svg'
 // const padding = 20
 const layout = `
 <div class="pg-container">
-  <h3 class="title">Plank Graph of: (<span class="starting-vectors"></span>)</h3>
+  <form action="/graph/save" method="POST">
+  <h3 class="title">Plank Graph of: <span class="vector-string"></span></h3>
+  <input type="text" value="" name="name" hidden></input>
+  <a href="#" class="view-graph">Open as Interactive</a>
   <div class="svg-container"></div>
+  <div class="info">
+    <button type="submit" class="btn btn-success" >Save Graph</button>
+  </div>
   <style>
     .pg-container svg.plank circle{
       fill: white;
@@ -12,15 +18,32 @@ const layout = `
       stroke-width: 1px;
     }
 
+    .pg-container h3 {
+      display: inline;
+    }
+
+    .pg-container a.view-graph {
+      margin-left: 20px;
+    }
+
     .pg-container svg.plank circle.matrix-element:hover {
       stroke: red;
     }
+
     .pg-container svg.plank circle.filled{
       fill: black;
     }
 
-    
+    .pg-container input[name="name"] {
+      width: 84rem;
+      border: none;
+    }
+
+    .pg-container button[type="submit"] {
+      display: none;
+    }
   </style>
+  </form>
 </div>
 `
 
@@ -38,14 +61,23 @@ function createGraph (graphEl) { // in standard cartesian coordinates
   // console.log('create graph')
   const b10Array = sanitizeInputNumbers(graphEl.dataset.starting)
   const b10ArrayAfter = Object.assign([], b10Array)
-  graphEl.querySelector('span.starting-vectors').innerText = graphEl.dataset.starting
+  // graphEl.querySelector('span.starting-vectors').innerText = graphEl.dataset.starting
+  const inputNameEl = graphEl.querySelector('input[name="name"]')
+  inputNameEl.value = graphEl.dataset.starting
+  graphEl.querySelector('span.vector-string').textContent = graphEl.dataset.starting
+  // set up all features for saving
+  if (graphEl.getAttribute('readonly') === 'false') {
+    console.log('graph is interactive')
+    graphEl.querySelector('button[type="submit"]').style.display = 'block'
+  }
+  const href = graphEl.querySelector('a').setAttribute('href', '/graph/byId?name=' + encodeURIComponent(b10Array.join(',')))
   const b2Array = b10tob2Array(b10Array, excessVectorPadding)
   const scale = b2Array[0].length
   // console.log('scale', scale)
   // var matrix = createNewMatrix(scale + b2Array.length)
   // console.log(matrix)
   const vectorCount = b2Array.length
-  console.log('b2Array', b2Array)
+  // console.log('b2Array', b2Array)
   const svg = document.createElementNS(NS,'svg')
   const height = increment * scale + increment
   const width =  increment * (vectorCount + scale / Math.SQRT2) 
@@ -102,7 +134,7 @@ function createGraph (graphEl) { // in standard cartesian coordinates
         topCircle.classList.add('filled')
       }
       svg.appendChild(bottomCircle)
-      console.log('graphEl', graphEl)
+      // console.log('graphEl', graphEl)
       // 
       // add user interaction
       addUserInteraction(topCircle, i, j)
@@ -133,24 +165,18 @@ function createGraph (graphEl) { // in standard cartesian coordinates
         vEls.forEach(el => {
           vector.push(el.classList.contains('filled'))
         })
-        console.log('vector', vector)
+        // console.log('vector', vector)
         const stringRepresentation = vector.map(el => el ? '1' : '0').reverse().join('')
         const number = parseInt(stringRepresentation, 2)
-        console.log('string representation', stringRepresentation, number)
+        // console.log('string representation', stringRepresentation, number)
         
         b10ArrayAfter[i] = number
-        console.log('b10ArrayAfter', b10ArrayAfter)
-        graphEl.querySelector('span.starting-vectors').innerText = b10ArrayAfter
+        // console.log('b10ArrayAfter', b10ArrayAfter)
+        // graphEl.querySelector('span.starting-vectors').innerText = b10ArrayAfter
+        graphEl.querySelector('input[name="name"]').value = b10ArrayAfter
+        graphEl.querySelector('span.vector-string').textContent = b10ArrayAfter
       })
     }
-
-    // function updateVectorsList (circle, i, j) {
-    //   circle.addEventListener('click', function (event) {
-    //     // console.log('updateVectorsList', i, j)
-       
-    //   })
-    // }
-
   }
 
   function addOriginCircle (svg, x, y, i) { // in offset coordinates

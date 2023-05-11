@@ -10,10 +10,10 @@ document.addEventListener('DOMContentLoaded', function () {
 },{"./plankGraph":2}],2:[function(require,module,exports){
 "use strict";
 
-var excessVectorPadding = 4;
+var excessVectorPadding = 6;
 var NS = 'http://www.w3.org/2000/svg';
 // const padding = 20
-var layout = "\n<div class=\"pg-container\">\n  <h3 class=\"title\">Plank Graph of: (<span class=\"starting-vectors\"></span>)</h3>\n  <div class=\"svg-container\"></div>\n  <style>\n    .pg-container svg.plank circle{\n      fill: white;\n      stroke: black;\n      stroke-width: 1px;\n    }\n\n    .pg-container svg.plank circle.matrix-element:hover {\n      stroke: red;\n    }\n    .pg-container svg.plank circle.filled{\n      fill: black;\n    }\n\n    \n  </style>\n</div>\n";
+var layout = "\n<div class=\"pg-container\">\n  <form action=\"/graph/save\" method=\"POST\">\n  <h3 class=\"title\">Plank Graph of: <span class=\"vector-string\"></span></h3>\n  <input type=\"text\" value=\"\" name=\"name\" hidden></input>\n  <a href=\"#\" class=\"view-graph\">Open as Interactive</a>\n  <div class=\"svg-container\"></div>\n  <div class=\"info\">\n    <button type=\"submit\" class=\"btn btn-success\" >Save Graph</button>\n  </div>\n  <style>\n    .pg-container svg.plank circle{\n      fill: white;\n      stroke: black;\n      stroke-width: 1px;\n    }\n\n    .pg-container h3 {\n      display: inline;\n    }\n\n    .pg-container a.view-graph {\n      margin-left: 20px;\n    }\n\n    .pg-container svg.plank circle.matrix-element:hover {\n      stroke: red;\n    }\n\n    .pg-container svg.plank circle.filled{\n      fill: black;\n    }\n\n    .pg-container input[name=\"name\"] {\n      width: 84rem;\n      border: none;\n    }\n\n    .pg-container button[type=\"submit\"] {\n      display: none;\n    }\n  </style>\n  </form>\n</div>\n";
 function init() {
   console.log('init');
   if (document.getElementsByClassName('plank-graph').length > 0) {
@@ -28,14 +28,23 @@ function createGraph(graphEl) {
   // console.log('create graph')
   var b10Array = sanitizeInputNumbers(graphEl.dataset.starting);
   var b10ArrayAfter = Object.assign([], b10Array);
-  graphEl.querySelector('span.starting-vectors').innerText = graphEl.dataset.starting;
+  // graphEl.querySelector('span.starting-vectors').innerText = graphEl.dataset.starting
+  var inputNameEl = graphEl.querySelector('input[name="name"]');
+  inputNameEl.value = graphEl.dataset.starting;
+  graphEl.querySelector('span.vector-string').textContent = graphEl.dataset.starting;
+  // set up all features for saving
+  if (graphEl.getAttribute('readonly') === 'false') {
+    console.log('graph is interactive');
+    graphEl.querySelector('button[type="submit"]').style.display = 'block';
+  }
+  var href = graphEl.querySelector('a').setAttribute('href', '/graph/byId?name=' + encodeURIComponent(b10Array.join(',')));
   var b2Array = b10tob2Array(b10Array, excessVectorPadding);
   var scale = b2Array[0].length;
   // console.log('scale', scale)
   // var matrix = createNewMatrix(scale + b2Array.length)
   // console.log(matrix)
   var vectorCount = b2Array.length;
-  console.log('b2Array', b2Array);
+  // console.log('b2Array', b2Array)
   var svg = document.createElementNS(NS, 'svg');
   var height = increment * scale + increment;
   var width = increment * (vectorCount + scale / Math.SQRT2);
@@ -95,7 +104,7 @@ function createGraph(graphEl) {
         topCircle.classList.add('filled');
       }
       svg.appendChild(bottomCircle);
-      console.log('graphEl', graphEl);
+      // console.log('graphEl', graphEl)
       // 
       // add user interaction
       addUserInteraction(topCircle, i, j);
@@ -124,26 +133,21 @@ function createGraph(graphEl) {
         vEls.forEach(function (el) {
           vector.push(el.classList.contains('filled'));
         });
-        console.log('vector', vector);
+        // console.log('vector', vector)
         var stringRepresentation = vector.map(function (el) {
           return el ? '1' : '0';
         }).reverse().join('');
         var number = parseInt(stringRepresentation, 2);
-        console.log('string representation', stringRepresentation, number);
+        // console.log('string representation', stringRepresentation, number)
+
         b10ArrayAfter[i] = number;
-        console.log('b10ArrayAfter', b10ArrayAfter);
-        graphEl.querySelector('span.starting-vectors').innerText = b10ArrayAfter;
+        // console.log('b10ArrayAfter', b10ArrayAfter)
+        // graphEl.querySelector('span.starting-vectors').innerText = b10ArrayAfter
+        graphEl.querySelector('input[name="name"]').value = b10ArrayAfter;
+        graphEl.querySelector('span.vector-string').textContent = b10ArrayAfter;
       });
     }
-
-    // function updateVectorsList (circle, i, j) {
-    //   circle.addEventListener('click', function (event) {
-    //     // console.log('updateVectorsList', i, j)
-
-    //   })
-    // }
   }
-
   function addOriginCircle(svg, x, y, i) {
     // in offset coordinates
     var circle = document.createElementNS(NS, 'circle');

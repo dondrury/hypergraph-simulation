@@ -3,8 +3,8 @@ const path = require('path')
 const express = require('express')
 const chalk = require('chalk')
 const mongoose = require('mongoose')
+var bodyParser = require('body-parser')
 const graphController = require('./controllers/graph')
-// const atomicVectors = require('./models/atomicVectors')
 mongoose.set('strictQuery', true)
 const app = express()
 
@@ -13,8 +13,7 @@ let connector = {}
 /* eslint-disable */
 var connected = false
 /* eslint-enable */
-// atomicVectors.scale(4)
-// atomicVectors.init()
+
 connect()
 function connect () {
   mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true }, function (err, db) {
@@ -25,7 +24,6 @@ mongoose.connection.on('connected', init)
 function init () {
   console.log(chalk.green('Mongoose connected with URI'))
   clearInterval(connector)
-  // console.log(chalk.green('Memcached connected with URI ' + process.env.MEMCACHED_URI))
 }
 mongoose.connection.on('disconnected', function () {
   console.log(chalk.red('Mongoose disconnected unexpectedly'))
@@ -51,14 +49,16 @@ mongoose.connection.on('error', () => {
 app.set('views', 'views')
 app.set('view engine', 'ejs')
 app.enable('strict routing')
+app.use( bodyParser.json())       // to support JSON-encoded bodies
+app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+  extended: true
+}))
+
 app.get('/', graphController.home)
 app.get('/graph/byId', graphController.getGraph)
-// app.get('/graph/new', graphController.newGraph)
-app.get('/graph/:id', graphController.getGraph)
-
-app.get('/plank-graph', graphController.getPlankGraph)
-
-// app.get('/graph/next/:id', graphController.nextGraph)
+app.get('/graph/new', graphController.newGraph)
+app.get('/graph/all', graphController.getAllGraphs)
+app.post('/graph/save', graphController.saveGraph)
 
 const publicServeOptions = {
   dotfiles: 'ignore',

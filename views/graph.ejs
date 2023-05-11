@@ -1,7 +1,2 @@
-<h2>Name <%= graph.name %></h2>
-<%- include('graphSVG') %>
-
-
-<script>
-  window.graph = <%- JSON.stringify(graph) %> ;
-</script>
+<div class="plank-graph" readonly="false" data-starting="<%= graph.name %>" data-radius="10" >
+</div>

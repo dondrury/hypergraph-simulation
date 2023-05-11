@@ -1,6 +1,4 @@
 const Graph = require('../models/graph')
-// const atomicVectorsModel = require('../models/atomicVectors')
-// const atomicVectors = atomicVectorsModel.all()
 
 exports.home = (req, res) => {
   return res.render('layout', { title: 'Home', view: 'home'})
@@ -8,72 +6,38 @@ exports.home = (req, res) => {
 
 exports.getGraph = (req, res) => {
   const name = req.query.name || req.params.name
-  // console.log({name});
   const graph = new Graph({ name: name })
-  // graph.fillFalse()
-  //
-  // graph.saturate()
-  graph.create()
-  // graph.fill([7, 11, 13])
-  // graph.print()
-  graph.save((err, g) => {
+  return res.render('layout', { title: '', view: 'graph', graph })
+}
+
+exports.newGraph = (req, res) => {
+  const graph = new Graph({ name: '0,0,0,0,0,0,0,0,0,0,0,0', notes: '' })
+  return res.render('layout', { title: 'New Graph', view: 'graph', graph })
+}
+
+exports.saveGraph = (req, res) => {
+  // console.log('req.body', req.body)
+  if (typeof req.body.name != 'string' || req.body.name.length === 0) return
+  const name = req.body.name.trim()
+  const graph = new Graph({
+    name
+  })
+  console.log(graph)
+  graph.save((err, savedGraph) => {
     if (err) {
       console.log(err)
-      return
+      return res.render('layout', {view: 'error', error: err })
     }
-    return res.render('layout', { title: 'Graph View ' + g.id, view: 'graph', graph })
+    return res.render('layout', {view: 'home', title: 'Saved Graph ' + name})
   })
 }
 
-// exports.newGraph = (req, res) => {
-//   const graph = new Graph({ name: '42,42,42,42,42,42,42,42,42' })
-//   // graph.fillFalse()
-//   //
-//   // graph.saturate()
-//   graph.create()
-//   // graph.fill([7, 11, 13])
-//   graph.print()
-//   graph.save((err, g) => {
-//     if (err) {
-//       console.log(err)
-//       return
-//     }
-//     return res.render('layout', { title: 'Graph View ' + g.id, view: 'graph', graph })
-//   })
-// }
-
-// exports.nextGraph = (req, res) => {
-//   const id = req.query.id || req.params.id
-//
-//   Graph.findById(id).exec((err, graph) => {
-//     if (err || !graph) {
-//       return res.render('layout', { title: 'Graph Not Found', view: '303' })
-//     }
-//     const newGraph = new Graph({
-//       adjascent: graph._id,
-//       cartesian: graph.cartesian,
-//       size: graph.size
-//     })
-//     // while (newGraph.changeRandomConnection() === false) {
-//     //   // console.log();
-//     // }
-//     newGraph.next()
-//     // console.log(newGraph.ordinality());
-//     newGraph.save((err, g) => {
-//       if (err) {
-//         console.log(err)
-//         return
-//       }
-//       return res.render('layout', { title: 'Graph View ' + newGraph.id, view: 'graph', graph: newGraph })
-//     })
-//   })
-// }
-exports.getQuantumVectors = (req, res) => {
-  const scale = parseInt(req.query.scale || req.params.scale, 10)
-  return res.render('layout', { title: 'Quantum Vectors, scale=' + scale, view: 'quantum-vectors', scale })
-}
-
-exports.getPlankGraph = (req, res) => {
-  // const scale = parseInt(req.query.scale || req.params.scale, 10)
-  return res.render('layout', { title: 'Plank Graph', view: 'plank-graph' })
+exports.getAllGraphs = (req, res) => {
+  Graph.find().exec((err, graphs) => {
+    if (err) {
+      return res.render('layout', {view: 'error', error: err.msg })
+    }
+    // console.log('allGraphs', graphs)
+    return res.render('layout', { view: 'allGraphs', title:'All Graphs', graphs})
+  })
 }
