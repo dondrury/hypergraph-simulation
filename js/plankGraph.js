@@ -9,6 +9,7 @@ const layout = `
   <input type="text" value="" name="name" hidden></input>
   <a href="#" class="view-interactive">Open as Interactive</a>
   <div class="svg-container"></div>
+  <div class="monte-carlo"></div>
   <div class="info">
     <button type="submit" class="btn btn-success" >Save Graph</button>
   </div>
@@ -29,6 +30,15 @@ const layout = `
 
     .pg-container svg.plank circle.matrix-element:hover {
       stroke: red;
+      cursor: pointer;
+    }
+
+    .pg-container svg circle.origin-circle:hover {
+      cursor: pointer;
+    }
+
+    .pg-container svg text.origin-circle:hover {
+      cursor: pointer;
     }
 
     .pg-container svg circle.origin-circle.non-compliant {
@@ -37,6 +47,10 @@ const layout = `
 
     .pg-container svg circle.origin-circle.compliant {
       fill: #5abf5a;
+    }
+
+    .pg-container svg circle.origin-circle.blink {
+      fill: #741bbd;
     }
 
 
@@ -119,9 +133,77 @@ function createGraph (graphEl) { // in standard cartesian coordinates
     const complianceVector = Library.validateVectorString(graphEl.dataset.starting)
     applyComplianceVector(svg, complianceVector)
   }
-  
+  monteCarloSimulation( 3)
  
   // end main createGraph body
+
+  function monteCarloSimulation(numberOfGraphs) { // monto carlo volume approximation of how volume grows with radius, start with j=0
+    console.log('monteCarloSimulation')
+    const vectorString = graphEl.querySelector('span.vector-string').textContent
+    const constVectorsWithOrigin = Library.vectorStringToMatrix(vectorString)
+    let vectorsWithOrigin = Object.assign([], constVectorsWithOrigin)
+    for (let k = 0; k < numberOfGraphs; k++) { // we have one full length too many here, but we don't actually use it
+      vectorsWithOrigin = vectorsWithOrigin.concat(constVectorsWithOrigin)
+    }
+    console.log('vectorsWithOrigin', vectorsWithOrigin) // actually an array of strings, but the chars are in the right place
+    // const paths = walkAllPaths()
+    // console.log('paths', paths)
+
+
+
+    // // function histogramUniqueElementsPerStep (paths) {
+    // //   // paths is array of paths
+    // //   for (let i = 0; i < constVectorsWithOrigin.length; i++) {
+    // //     let stepSection
+    // //   }
+    // // }
+    
+    // function walkAllPaths() {
+    //   let paths = []
+    //   for (let p = 0; p < constVectorsWithOrigin.length - 1; p++) {
+    //     console.log('path starting at ' + p)
+    //     let path = [p] // include starting element
+    //     walkPath(p, path)
+    //     // console.log(path)
+    //     path = path.map(val => val - p) // normalize path by subtracting the first element from all of them, bringing them all back to zero
+    //     paths.push(path) // these path values do NOT represent the actual matrix-element value, all shifted back by starting point. They superimpose
+    //   }
+    //   return paths
+    // }
+
+    // function walkPath (startElement, path) {
+      
+    //   const next = nextElement(startElement, path)
+    //   // console.log(next)
+    //   path.push(next)
+    //   if (next >= vectorsWithOrigin.length - constVectorsWithOrigin.length) return // stay in n - 1 graphs
+    //   walkPath(next, path)
+    // }
+    
+    // function nextElement (j, path) {
+    //   let elementsToChooseFrom = []
+    //   console.log('next element', j)
+    //   for(let i = 0; i < vectorsWithOrigin[j].length; i++) { // this can fail in the forward direction when it encounters any empty "0" vector
+    //     if (vectorsWithOrigin[j][i] === '1') elementsToChooseFrom.push((i + j) % vectorsWithOrigin.length)
+    //   }
+    //   if (elementsToChooseFrom.length === 0) { // we have failed to find any elements in the forward direction, go back
+    //     for(let i = 0; i < vectorsWithOrigin[j].length; i++) { // this can fail in the forward direction when it encounters any empty "0" vector
+    //       if (vectorsWithOrigin[vectorsWithOrigin.length + j - i][i] === '1') elementsToChooseFrom.push((i + j) % vectorsWithOrigin.length)
+    //     }
+    //   }
+    //   console.log('elementsToChooseFrom j=' + j, elementsToChooseFrom)
+    //   const chosenElement = elementsToChooseFrom[Math.floor(Math.random() * elementsToChooseFrom.length)]
+    //   // console.log('chosenElement', chosenElement)
+    //   const originCircle =  svg.getElementById('matrix-element-' + chosenElement + '-' + chosenElement)
+    //   // if (originCircle) {
+    //   //   originCircle.classList.add('blink')
+    //   //   setTimeout(() => {
+    //   //     originCircle.classList.remove('blink')
+    //   //   }, 300);
+    //   // }
+    //   return chosenElement
+    // }
+  }
 
   function addVectorCircles (svg, i) { // in offset coordinates, i is vector number
     const vector = b2Array[i].split('').reverse().join('')
@@ -230,6 +312,7 @@ function createGraph (graphEl) { // in standard cartesian coordinates
     circle.classList.add('origin-circle')
     svg.appendChild(circle)
     const text = document.createElementNS(NS, 'text')
+    text.classList.add('origin-circle')
     text.textContent = i
     text.setAttribute('font-family', 'Verdana')
     text.setAttribute('stroke', 'black')
@@ -241,6 +324,16 @@ function createGraph (graphEl) { // in standard cartesian coordinates
     text.setAttribute('y', yOffset(y) + circleRadius / 3)
     text.id = 'matrix-element-label-' + i + '-' + i
     svg.appendChild(text)
+    // if (graphEl.getAttribute('readonly') === 'false') {
+    //   circle.addEventListener('click', function (event) {
+    //     event.stopPropagation()
+    //     monteCarloSimulation(i)
+    //   })
+    //   text.addEventListener('click', function (event) {
+    //     event.stopPropagation()
+    //     monteCarloSimulation(i)
+    //   })
+    // }
   }
   
   function addSolidLine (svg, x1, y1, x2, y2) { // in offset coordinates

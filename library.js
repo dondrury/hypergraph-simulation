@@ -27,6 +27,22 @@ exports.validateVectorString = function(vectorString) {
   return resultsArray
 }
 
+function vectorStringToMatrix (vectorString) {
+  const base10Array = vectorStringToBase10Array(vectorString)
+  const base2Array = base10ArrayToBase2Array(base10Array, 0)
+  // console.log('base2Array', base2Array)
+  //  each vector still in reverse order and still a string base 2
+  const vectors = base2Array.map(vectorString => {
+    const inGraphOrderArray = vectorString.split('').reverse()
+    inGraphOrderArray.unshift('0')
+    return inGraphOrderArray.join('')
+  })
+  console.log(vectors)
+  return vectors
+}
+
+exports.vectorStringToMatrix = vectorStringToMatrix
+
 function vectorStringToBase10Array(nums) {
   if (typeof nums !== 'string') {
     console.log('array of input numbers should be a string')
