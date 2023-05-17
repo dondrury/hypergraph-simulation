@@ -319,11 +319,6 @@ function makeSparseMatrix(vectorString) {
   // console.log('sparseMatrix', sparseMatrix)
   return sparseMatrix;
 }
-function setCharAt(str, index, chr) {
-  // console.log('setCharAt', str, inde)
-  if (index > str.length - 1) return str;
-  return str.substring(0, index) + chr + str.substring(index + 1);
-}
 exports.makeSparseMatrix = makeSparseMatrix;
 function vectorStringToBase10Array(nums) {
   if (typeof nums !== 'string') {
