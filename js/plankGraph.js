@@ -14,6 +14,12 @@ const layout = `
     <button type="submit" class="btn btn-success" >Save Graph</button>
   </div>
   <style>
+
+    .pg-container .svg-container {
+      max-width: 100%;
+      overflow-y: scroll;
+      overflow-y: hidden;
+    }
     .pg-container svg.plank circle{
       fill: white;
       stroke: black;
@@ -133,76 +139,15 @@ function createGraph (graphEl) { // in standard cartesian coordinates
     const complianceVector = Library.validateVectorString(graphEl.dataset.starting)
     applyComplianceVector(svg, complianceVector)
   }
-  monteCarloSimulation( 3)
+  monteCarloSimulation()
  
   // end main createGraph body
 
-  function monteCarloSimulation(numberOfGraphs) { // monto carlo volume approximation of how volume grows with radius, start with j=0
+  function monteCarloSimulation() { // monto carlo volume approximation of how volume grows with radius, start with j=0
     console.log('monteCarloSimulation')
     const vectorString = graphEl.querySelector('span.vector-string').textContent
-    const constVectorsWithOrigin = Library.vectorStringToMatrix(vectorString)
-    let vectorsWithOrigin = Object.assign([], constVectorsWithOrigin)
-    for (let k = 0; k < numberOfGraphs; k++) { // we have one full length too many here, but we don't actually use it
-      vectorsWithOrigin = vectorsWithOrigin.concat(constVectorsWithOrigin)
-    }
-    console.log('vectorsWithOrigin', vectorsWithOrigin) // actually an array of strings, but the chars are in the right place
-    // const paths = walkAllPaths()
-    // console.log('paths', paths)
-
-
-
-    // // function histogramUniqueElementsPerStep (paths) {
-    // //   // paths is array of paths
-    // //   for (let i = 0; i < constVectorsWithOrigin.length; i++) {
-    // //     let stepSection
-    // //   }
-    // // }
+    const matrix = Library.makeSparseMatrix(vectorString)
     
-    // function walkAllPaths() {
-    //   let paths = []
-    //   for (let p = 0; p < constVectorsWithOrigin.length - 1; p++) {
-    //     console.log('path starting at ' + p)
-    //     let path = [p] // include starting element
-    //     walkPath(p, path)
-    //     // console.log(path)
-    //     path = path.map(val => val - p) // normalize path by subtracting the first element from all of them, bringing them all back to zero
-    //     paths.push(path) // these path values do NOT represent the actual matrix-element value, all shifted back by starting point. They superimpose
-    //   }
-    //   return paths
-    // }
-
-    // function walkPath (startElement, path) {
-      
-    //   const next = nextElement(startElement, path)
-    //   // console.log(next)
-    //   path.push(next)
-    //   if (next >= vectorsWithOrigin.length - constVectorsWithOrigin.length) return // stay in n - 1 graphs
-    //   walkPath(next, path)
-    // }
-    
-    // function nextElement (j, path) {
-    //   let elementsToChooseFrom = []
-    //   console.log('next element', j)
-    //   for(let i = 0; i < vectorsWithOrigin[j].length; i++) { // this can fail in the forward direction when it encounters any empty "0" vector
-    //     if (vectorsWithOrigin[j][i] === '1') elementsToChooseFrom.push((i + j) % vectorsWithOrigin.length)
-    //   }
-    //   if (elementsToChooseFrom.length === 0) { // we have failed to find any elements in the forward direction, go back
-    //     for(let i = 0; i < vectorsWithOrigin[j].length; i++) { // this can fail in the forward direction when it encounters any empty "0" vector
-    //       if (vectorsWithOrigin[vectorsWithOrigin.length + j - i][i] === '1') elementsToChooseFrom.push((i + j) % vectorsWithOrigin.length)
-    //     }
-    //   }
-    //   console.log('elementsToChooseFrom j=' + j, elementsToChooseFrom)
-    //   const chosenElement = elementsToChooseFrom[Math.floor(Math.random() * elementsToChooseFrom.length)]
-    //   // console.log('chosenElement', chosenElement)
-    //   const originCircle =  svg.getElementById('matrix-element-' + chosenElement + '-' + chosenElement)
-    //   // if (originCircle) {
-    //   //   originCircle.classList.add('blink')
-    //   //   setTimeout(() => {
-    //   //     originCircle.classList.remove('blink')
-    //   //   }, 300);
-    //   // }
-    //   return chosenElement
-    // }
   }
 
   function addVectorCircles (svg, i) { // in offset coordinates, i is vector number

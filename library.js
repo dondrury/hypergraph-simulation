@@ -1,4 +1,4 @@
-exports.validateVectorString = function(vectorString) {
+function validateVectorString (vectorString) {
   // console.log(vectorString)
   const base10Array = vectorStringToBase10Array(vectorString)
   const base2Array = base10ArrayToBase2Array(base10Array, 0)
@@ -9,7 +9,7 @@ exports.validateVectorString = function(vectorString) {
     inGraphOrderArray.unshift('0')
     return inGraphOrderArray.join('')
   })
-  // console.log('vectors', vectors) // example [ "1101", "1101", "0000", "1001", "0010", "0010", "1010", "0000", "1000", "0000", … ]
+  // console.log('vectors', vectors) // example  [ "01100", "00001", "01100", "00001", "01100", "00001", "01100", "00001", "01100", "00001", … ]
   let resultsArray = []
   for(let j = 0; j < vectors.length; j++) { // j is the "row" or number of vector
     let count = 0
@@ -17,9 +17,9 @@ exports.validateVectorString = function(vectorString) {
     for(let i = 0; i < vectors[j].length; i++) {
       if (vectors[j][i] === '1') count++
       // console.log('rightwardVectorIndes',j,i)
-      const leftwardVector = (vectors.length + j - i) % (vectors.length)
+      const leftwardVectorIndex = (vectors.length + j - i) % (vectors.length)
       // console.log('leftwardVectorIndeces', leftwardVector, i)
-      if (vectors[leftwardVector][i] === '1') count++
+      if (vectors[leftwardVectorIndex][i] === '1') count++
     }
     resultsArray.push(count === 3)
   }
@@ -27,7 +27,9 @@ exports.validateVectorString = function(vectorString) {
   return resultsArray
 }
 
-function vectorStringToMatrix (vectorString) {
+exports.validateVectorString = validateVectorString
+
+function makeSparseMatrix (vectorString) {
   const base10Array = vectorStringToBase10Array(vectorString)
   const base2Array = base10ArrayToBase2Array(base10Array, 0)
   // console.log('base2Array', base2Array)
@@ -37,11 +39,37 @@ function vectorStringToMatrix (vectorString) {
     inGraphOrderArray.unshift('0')
     return inGraphOrderArray.join('')
   })
-  console.log(vectors)
-  return vectors
+ 
+  // console.log('vectors in makeSparseMatrix', vectors)
+  const sparseMatrix = []
+  for( let m = 0; m < vectors.length; m++) { // make l x l matrix
+    const row = new Array(vectors.length).fill('0') // recursive fills leaves behind pointers apparently!
+    sparseMatrix.push(row)
+  }
+  // console.log('sparseMatrix', sparseMatrix)
+  for(let j = 0; j < vectors.length; j++) { // j is the "row" or number of vector
+    for(let i = 0; i < vectors[j].length; i++) { // i is the index of the vector, with origin
+      if (vectors[j][i] === '1') { // this is a 'dot' on the interactive view, regarding element j
+        const rightwardVectorIndex = (j + i) % vectors.length
+        // console.log('(j, rightwardVectorIndex)', j, rightwardVectorIndex)
+        sparseMatrix[j][rightwardVectorIndex] = '1'
+        sparseMatrix[rightwardVectorIndex][j] = '1'
+      }
+    }
+    
+  }
+  // console.log('sparseMatrix', sparseMatrix)
+  return sparseMatrix
+  
 }
 
-exports.vectorStringToMatrix = vectorStringToMatrix
+function setCharAt(str,index,chr) {
+  // console.log('setCharAt', str, inde)
+  if(index > str.length-1) return str;
+  return str.substring(0,index) + chr + str.substring(index+1);
+}
+
+exports.makeSparseMatrix = makeSparseMatrix
 
 function vectorStringToBase10Array(nums) {
   if (typeof nums !== 'string') {

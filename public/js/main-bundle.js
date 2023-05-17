@@ -14,7 +14,7 @@ var Library = require('../library');
 var excessVectorPadding = 6;
 var NS = 'http://www.w3.org/2000/svg';
 // const padding = 20
-var layout = "\n<div class=\"pg-container\">\n  <form action=\"/graph/save\" method=\"POST\">\n  <h3 class=\"title\">Plank Graph of: <span class=\"vector-string\"></span></h3>\n  <input type=\"text\" value=\"\" name=\"name\" hidden></input>\n  <a href=\"#\" class=\"view-interactive\">Open as Interactive</a>\n  <div class=\"svg-container\"></div>\n  <div class=\"monte-carlo\"></div>\n  <div class=\"info\">\n    <button type=\"submit\" class=\"btn btn-success\" >Save Graph</button>\n  </div>\n  <style>\n    .pg-container svg.plank circle{\n      fill: white;\n      stroke: black;\n      stroke-width: 1px;\n    }\n\n    .pg-container h3 {\n      display: inline;\n    }\n\n    .pg-container a.view-interactive {\n      margin-left: 20px;\n    }\n\n    .pg-container svg.plank circle.matrix-element:hover {\n      stroke: red;\n      cursor: pointer;\n    }\n\n    .pg-container svg circle.origin-circle:hover {\n      cursor: pointer;\n    }\n\n    .pg-container svg text.origin-circle:hover {\n      cursor: pointer;\n    }\n\n    .pg-container svg circle.origin-circle.non-compliant {\n      fill: #ff7575;\n    }\n\n    .pg-container svg circle.origin-circle.compliant {\n      fill: #5abf5a;\n    }\n\n    .pg-container svg circle.origin-circle.blink {\n      fill: #741bbd;\n    }\n\n\n    .pg-container svg.plank circle.filled{\n      fill: black;\n    }\n\n    .pg-container input[name=\"name\"] {\n      width: 84rem;\n      border: none;\n    }\n\n    .pg-container button[type=\"submit\"] {\n      display: none;\n    }\n  </style>\n  </form>\n</div>\n";
+var layout = "\n<div class=\"pg-container\">\n  <form action=\"/graph/save\" method=\"POST\">\n  <h3 class=\"title\">Plank Graph of: <span class=\"vector-string\"></span></h3>\n  <input type=\"text\" value=\"\" name=\"name\" hidden></input>\n  <a href=\"#\" class=\"view-interactive\">Open as Interactive</a>\n  <div class=\"svg-container\"></div>\n  <div class=\"monte-carlo\"></div>\n  <div class=\"info\">\n    <button type=\"submit\" class=\"btn btn-success\" >Save Graph</button>\n  </div>\n  <style>\n\n    .pg-container .svg-container {\n      max-width: 100%;\n      overflow-y: scroll;\n      overflow-y: hidden;\n    }\n    .pg-container svg.plank circle{\n      fill: white;\n      stroke: black;\n      stroke-width: 1px;\n    }\n\n    .pg-container h3 {\n      display: inline;\n    }\n\n    .pg-container a.view-interactive {\n      margin-left: 20px;\n    }\n\n    .pg-container svg.plank circle.matrix-element:hover {\n      stroke: red;\n      cursor: pointer;\n    }\n\n    .pg-container svg circle.origin-circle:hover {\n      cursor: pointer;\n    }\n\n    .pg-container svg text.origin-circle:hover {\n      cursor: pointer;\n    }\n\n    .pg-container svg circle.origin-circle.non-compliant {\n      fill: #ff7575;\n    }\n\n    .pg-container svg circle.origin-circle.compliant {\n      fill: #5abf5a;\n    }\n\n    .pg-container svg circle.origin-circle.blink {\n      fill: #741bbd;\n    }\n\n\n    .pg-container svg.plank circle.filled{\n      fill: black;\n    }\n\n    .pg-container input[name=\"name\"] {\n      width: 84rem;\n      border: none;\n    }\n\n    .pg-container button[type=\"submit\"] {\n      display: none;\n    }\n  </style>\n  </form>\n</div>\n";
 function init() {
   console.log('init');
   if (document.getElementsByClassName('plank-graph').length > 0) {
@@ -84,78 +84,16 @@ function createGraph(graphEl) {
     var complianceVector = Library.validateVectorString(graphEl.dataset.starting);
     applyComplianceVector(svg, complianceVector);
   }
-  monteCarloSimulation(3);
+  monteCarloSimulation();
 
   // end main createGraph body
 
-  function monteCarloSimulation(numberOfGraphs) {
+  function monteCarloSimulation() {
     // monto carlo volume approximation of how volume grows with radius, start with j=0
     console.log('monteCarloSimulation');
     var vectorString = graphEl.querySelector('span.vector-string').textContent;
-    var constVectorsWithOrigin = Library.vectorStringToMatrix(vectorString);
-    var vectorsWithOrigin = Object.assign([], constVectorsWithOrigin);
-    for (var k = 0; k < numberOfGraphs; k++) {
-      // we have one full length too many here, but we don't actually use it
-      vectorsWithOrigin = vectorsWithOrigin.concat(constVectorsWithOrigin);
-    }
-    console.log('vectorsWithOrigin', vectorsWithOrigin); // actually an array of strings, but the chars are in the right place
-    // const paths = walkAllPaths()
-    // console.log('paths', paths)
-
-    // // function histogramUniqueElementsPerStep (paths) {
-    // //   // paths is array of paths
-    // //   for (let i = 0; i < constVectorsWithOrigin.length; i++) {
-    // //     let stepSection
-    // //   }
-    // // }
-
-    // function walkAllPaths() {
-    //   let paths = []
-    //   for (let p = 0; p < constVectorsWithOrigin.length - 1; p++) {
-    //     console.log('path starting at ' + p)
-    //     let path = [p] // include starting element
-    //     walkPath(p, path)
-    //     // console.log(path)
-    //     path = path.map(val => val - p) // normalize path by subtracting the first element from all of them, bringing them all back to zero
-    //     paths.push(path) // these path values do NOT represent the actual matrix-element value, all shifted back by starting point. They superimpose
-    //   }
-    //   return paths
-    // }
-
-    // function walkPath (startElement, path) {
-
-    //   const next = nextElement(startElement, path)
-    //   // console.log(next)
-    //   path.push(next)
-    //   if (next >= vectorsWithOrigin.length - constVectorsWithOrigin.length) return // stay in n - 1 graphs
-    //   walkPath(next, path)
-    // }
-
-    // function nextElement (j, path) {
-    //   let elementsToChooseFrom = []
-    //   console.log('next element', j)
-    //   for(let i = 0; i < vectorsWithOrigin[j].length; i++) { // this can fail in the forward direction when it encounters any empty "0" vector
-    //     if (vectorsWithOrigin[j][i] === '1') elementsToChooseFrom.push((i + j) % vectorsWithOrigin.length)
-    //   }
-    //   if (elementsToChooseFrom.length === 0) { // we have failed to find any elements in the forward direction, go back
-    //     for(let i = 0; i < vectorsWithOrigin[j].length; i++) { // this can fail in the forward direction when it encounters any empty "0" vector
-    //       if (vectorsWithOrigin[vectorsWithOrigin.length + j - i][i] === '1') elementsToChooseFrom.push((i + j) % vectorsWithOrigin.length)
-    //     }
-    //   }
-    //   console.log('elementsToChooseFrom j=' + j, elementsToChooseFrom)
-    //   const chosenElement = elementsToChooseFrom[Math.floor(Math.random() * elementsToChooseFrom.length)]
-    //   // console.log('chosenElement', chosenElement)
-    //   const originCircle =  svg.getElementById('matrix-element-' + chosenElement + '-' + chosenElement)
-    //   // if (originCircle) {
-    //   //   originCircle.classList.add('blink')
-    //   //   setTimeout(() => {
-    //   //     originCircle.classList.remove('blink')
-    //   //   }, 300);
-    //   // }
-    //   return chosenElement
-    // }
+    var matrix = Library.makeSparseMatrix(vectorString);
   }
-
   function addVectorCircles(svg, i) {
     // in offset coordinates, i is vector number
     var vector = b2Array[i].split('').reverse().join('');
@@ -316,7 +254,7 @@ module.exports = init;
 },{"../library":3}],3:[function(require,module,exports){
 "use strict";
 
-exports.validateVectorString = function (vectorString) {
+function validateVectorString(vectorString) {
   // console.log(vectorString)
   var base10Array = vectorStringToBase10Array(vectorString);
   var base2Array = base10ArrayToBase2Array(base10Array, 0);
@@ -327,7 +265,7 @@ exports.validateVectorString = function (vectorString) {
     inGraphOrderArray.unshift('0');
     return inGraphOrderArray.join('');
   });
-  // console.log('vectors', vectors) // example [ "1101", "1101", "0000", "1001", "0010", "0010", "1010", "0000", "1000", "0000", … ]
+  // console.log('vectors', vectors) // example  [ "01100", "00001", "01100", "00001", "01100", "00001", "01100", "00001", "01100", "00001", … ]
   var resultsArray = [];
   for (var j = 0; j < vectors.length; j++) {
     // j is the "row" or number of vector
@@ -336,16 +274,17 @@ exports.validateVectorString = function (vectorString) {
     for (var i = 0; i < vectors[j].length; i++) {
       if (vectors[j][i] === '1') count++;
       // console.log('rightwardVectorIndes',j,i)
-      var leftwardVector = (vectors.length + j - i) % vectors.length;
+      var leftwardVectorIndex = (vectors.length + j - i) % vectors.length;
       // console.log('leftwardVectorIndeces', leftwardVector, i)
-      if (vectors[leftwardVector][i] === '1') count++;
+      if (vectors[leftwardVectorIndex][i] === '1') count++;
     }
     resultsArray.push(count === 3);
   }
   // console.log('resultsArray', resultsArray)
   return resultsArray;
-};
-function vectorStringToMatrix(vectorString) {
+}
+exports.validateVectorString = validateVectorString;
+function makeSparseMatrix(vectorString) {
   var base10Array = vectorStringToBase10Array(vectorString);
   var base2Array = base10ArrayToBase2Array(base10Array, 0);
   // console.log('base2Array', base2Array)
@@ -355,10 +294,37 @@ function vectorStringToMatrix(vectorString) {
     inGraphOrderArray.unshift('0');
     return inGraphOrderArray.join('');
   });
-  console.log(vectors);
-  return vectors;
+
+  // console.log('vectors in makeSparseMatrix', vectors)
+  var sparseMatrix = [];
+  for (var m = 0; m < vectors.length; m++) {
+    // make l x l matrix
+    var row = new Array(vectors.length).fill('0'); // recursive fills leaves behind pointers apparently!
+    sparseMatrix.push(row);
+  }
+  // console.log('sparseMatrix', sparseMatrix)
+  for (var j = 0; j < vectors.length; j++) {
+    // j is the "row" or number of vector
+    for (var i = 0; i < vectors[j].length; i++) {
+      // i is the index of the vector, with origin
+      if (vectors[j][i] === '1') {
+        // this is a 'dot' on the interactive view, regarding element j
+        var rightwardVectorIndex = (j + i) % vectors.length;
+        // console.log('(j, rightwardVectorIndex)', j, rightwardVectorIndex)
+        sparseMatrix[j][rightwardVectorIndex] = '1';
+        sparseMatrix[rightwardVectorIndex][j] = '1';
+      }
+    }
+  }
+  // console.log('sparseMatrix', sparseMatrix)
+  return sparseMatrix;
 }
-exports.vectorStringToMatrix = vectorStringToMatrix;
+function setCharAt(str, index, chr) {
+  // console.log('setCharAt', str, inde)
+  if (index > str.length - 1) return str;
+  return str.substring(0, index) + chr + str.substring(index + 1);
+}
+exports.makeSparseMatrix = makeSparseMatrix;
 function vectorStringToBase10Array(nums) {
   if (typeof nums !== 'string') {
     console.log('array of input numbers should be a string');
