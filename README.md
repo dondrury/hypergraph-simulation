@@ -8,7 +8,7 @@ In his book, he approaches the Ruliad generatively, trying to locate individual 
 
 ## Is this a Grand Unified Theory of Physics ?
 
-I beleive it *may* be, but the only way to find out is to analyse the spaces and the structures within them and see if they obey physical invariants. Before that can be done we must first produce all the 3-ordinal hypergraphs with 3 or less spacial dimensions, and stack them on top of each other (superposition) in order to see what sort of structures (light, bosons, fermions) emerge and how they interact with space and one another. Only then could we determine if they behave in the expected manner, with the symmetries predicted by the Standard Model. 
+I beleive it *may* be, but the only way to find out is to analyse the spaces and the structures within them and see if they obey physical invariants. Before that can be done we must first produce all the 3-ordinal hypergraphs with 3 or less spacial dimensions, and stack them on top of each other (superposition) in order to see what sort of structures (photons, bosons, fermions) emerge and how they interact with space and one another. Only then could we determine if they behave in the expected manner, with the symmetries predicted by the Standard Model. 
 
 The problem is that the computational work to do such a thing is mind-boggling, and it cannot be performed deductively, by exploring all possible spaces. Instead, I am creating a "game" that is hardly more than a board game, to use the wonders of the human mind (which I beleive actually IS a quantum computer) to inductively discover spaces. In fact my first model of the game was merely marbles on a wooden plank, with divots cut in it like a Chinese Checkers board, in the positions you see on our graphs. 3 marbles in a row, and 3 marbles in a column. It sounds ridiculous that something so beautiful could emerge from something so simple, but here we are. I think we really do live in that kind of a world. It's fascinating, and has been right under our noses the whole time. 
 
@@ -26,7 +26,7 @@ These are incredible structures, the most beautiful mathematic structures I've e
 
 There is only one rule.
 
-** Each Element relates to exactly three others. No more, no less **
+**Each Element relates to exactly three others. No more, no less**
 
 For this one rule, uncountably many beatiful structures are formed. 
 
@@ -34,9 +34,9 @@ I have found, through playing with the interactive view that there is a sort of 
 
 ## My Goal for this Project
 
-This is public and open source. I feel that this knowledge is so important that no person can or should claim ownership. Personally, I feel, like Nikola Tesla, that though I have put much personal effort into this way of thinking, that I have and continue to have help that I cannot fully explain. I encourage you to think of it that way as well, because Absolute Truth is discoverably only through humility, and not selfish motivations. If this in fact a Grand Unified Theory, all people shoud benefit, not just me, or you. Knowledge is, and should always be, free, to serve the benefit of mankind.
+This is public and open source. I feel that this knowledge is so important that no person can or should claim ownership. Personally, I feel that though I have put much personal effort into this way of thinking, that I have and continue to have help that I cannot fully explain. I encourage you to think of it that way as well, because Absolute Truth is discoverably only through humility, and not selfish motivations. If this in fact a Grand Unified Theory, all people shoud benefit, not just me, or you. Knowledge is, and should always be, free, to serve the benefit of mankind.
 
-Once I am further along, I release the Javascript as a standalone script that can be added to any website, and still send the completed graphs back to a central database for analysis, where we can begin to answer the big questions. In fact you could use the script for that purpose now, but the database has not been set up yet, and it is not mature enough to document for public use. I will continue to work on this as I have time!
+Once I am further along, I will release the Javascript as a standalone script that can be added to any website, and still send the completed graphs back to a central database for analysis, where we can begin to answer the big questions. In fact you could use the script for that purpose now, but the database has not been set up yet, and it is not mature enough to document for public use. I will continue to work on this as I have time!
 
 ## Thanks
 

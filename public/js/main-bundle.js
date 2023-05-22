@@ -232,6 +232,7 @@ function createGraph(graphEl) {
       square.setAttribute('height', squareSize);
       // square.id = 'sparse-element-' + i + '-' + i
       square.setAttribute('stroke', 'black');
+      square.setAttribute('stroke-width', '0.5px');
       square.setAttribute('fill', value === '1' ? 'black' : 'white');
       // square.classList.add('origin-circle')
       svg.appendChild(square);
