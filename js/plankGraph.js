@@ -1,4 +1,4 @@
-const Library = require('../library')
+const Library = require('./library')
 const excessVectorPadding = 6
 const NS = 'http://www.w3.org/2000/svg'
 // const padding = 20
@@ -9,7 +9,8 @@ const layout = `
   <input type="text" value="" name="name" hidden></input>
   <a href="#" class="view-interactive">Open as Interactive</a>
   <div class="svg-container"></div>
-  <div class="monte-carlo"></div>
+  <h4>Sparse Matrix Representation</h4>
+  <div class="sparse-matrix-container"></div>
   <div class="info">
     <button type="submit" class="btn btn-success" >Save Graph</button>
   </div>
@@ -138,16 +139,48 @@ function createGraph (graphEl) { // in standard cartesian coordinates
   if (graphEl.getAttribute('readonly') === 'false') {
     const complianceVector = Library.validateVectorString(graphEl.dataset.starting)
     applyComplianceVector(svg, complianceVector)
+    createSpareMatrix()
   }
-  monteCarloSimulation()
  
   // end main createGraph body
 
-  function monteCarloSimulation() { // monto carlo volume approximation of how volume grows with radius, start with j=0
-    console.log('monteCarloSimulation')
+  function createSpareMatrix() { // monto carlo volume approximation of how volume grows with radius, start with j=0
+    console.log('createSpareMatrix')
+    const squareSize = 10
     const vectorString = graphEl.querySelector('span.vector-string').textContent
     const matrix = Library.makeSparseMatrix(vectorString)
-    
+    const svg = document.createElementNS(NS,'svg')
+    const height = matrix.length * squareSize
+    const width =  matrix.length * squareSize
+    const yOffset = m => m * squareSize
+    const xOffset = n => n * squareSize
+    svg.setAttributeNS(NS,'viewBox', `${0} ${0} ${width} ${height}`)
+    svg.style.height = height + 'px'
+    svg.style.width = width + 'px'
+    svg.style.backgroundColor = '#d3d3d333'
+    svg.classList.add('sparse-matrix')
+    const svgContainer = graphEl.querySelector('div.sparse-matrix-container')
+    svgContainer.appendChild(svg)
+    const sparseMatrix = Library.makeSparseMatrix(vectorString)
+    console.log(sparseMatrix)
+    for (let j = 0; j < sparseMatrix.length; j++){ //rows
+      for (let i= 0; i < sparseMatrix[j].length; i++) { //columns
+        addMatrixSquare(j, i, sparseMatrix[j][i])
+      }
+    }
+
+    function addMatrixSquare (j, i, value) {
+      const square = document.createElementNS(NS,'rect')
+      square.setAttribute('y', yOffset(j))
+      square.setAttribute('x', xOffset(i))
+      square.setAttribute('width', squareSize)
+      square.setAttribute('height', squareSize)
+      // square.id = 'sparse-element-' + i + '-' + i
+      square.setAttribute('stroke', 'black')
+      square.setAttribute('fill', value === '1' ? 'black' : 'white')
+      // square.classList.add('origin-circle')
+      svg.appendChild(square)
+    }
   }
 
   function addVectorCircles (svg, i) { // in offset coordinates, i is vector number

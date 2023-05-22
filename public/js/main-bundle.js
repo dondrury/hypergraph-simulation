@@ -1,4 +1,109 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+"use strict";
+
+function validateVectorString(vectorString) {
+  // console.log(vectorString)
+  var base10Array = vectorStringToBase10Array(vectorString);
+  var base2Array = base10ArrayToBase2Array(base10Array, 0);
+  // console.log('base2Array', base2Array)
+  //  each vector still in reverse order and still a string base 2
+  var vectors = base2Array.map(function (vectorString) {
+    var inGraphOrderArray = vectorString.split('').reverse();
+    inGraphOrderArray.unshift('0');
+    return inGraphOrderArray.join('');
+  });
+  // console.log('vectors', vectors) // example  [ "01100", "00001", "01100", "00001", "01100", "00001", "01100", "00001", "01100", "00001", … ]
+  var resultsArray = [];
+  for (var j = 0; j < vectors.length; j++) {
+    // j is the "row" or number of vector
+    var count = 0;
+    // console.log('j', j)
+    for (var i = 0; i < vectors[j].length; i++) {
+      if (vectors[j][i] === '1') count++;
+      // console.log('rightwardVectorIndes',j,i)
+      var leftwardVectorIndex = (vectors.length + j - i) % vectors.length;
+      // console.log('leftwardVectorIndeces', leftwardVector, i)
+      if (vectors[leftwardVectorIndex][i] === '1') count++;
+    }
+    resultsArray.push(count === 3);
+  }
+  // console.log('resultsArray', resultsArray)
+  return resultsArray;
+}
+exports.validateVectorString = validateVectorString;
+function makeSparseMatrix(vectorString) {
+  var base10Array = vectorStringToBase10Array(vectorString);
+  var base2Array = base10ArrayToBase2Array(base10Array, 0);
+  // console.log('base2Array', base2Array)
+  //  each vector still in reverse order and still a string base 2
+  var vectors = base2Array.map(function (vectorString) {
+    var inGraphOrderArray = vectorString.split('').reverse();
+    inGraphOrderArray.unshift('0');
+    return inGraphOrderArray.join('');
+  });
+
+  // console.log('vectors in makeSparseMatrix', vectors)
+  var sparseMatrix = [];
+  for (var m = 0; m < vectors.length; m++) {
+    // make l x l matrix
+    var row = new Array(vectors.length).fill('0'); // recursive fills leaves behind pointers apparently!
+    sparseMatrix.push(row);
+  }
+  // console.log('sparseMatrix', sparseMatrix)
+  for (var j = 0; j < vectors.length; j++) {
+    // j is the "row" or number of vector
+    for (var i = 0; i < vectors[j].length; i++) {
+      // i is the index of the vector, with origin
+      if (vectors[j][i] === '1') {
+        // this is a 'dot' on the interactive view, regarding element j
+        var rightwardVectorIndex = (j + i) % vectors.length;
+        // console.log('(j, rightwardVectorIndex)', j, rightwardVectorIndex)
+        sparseMatrix[j][rightwardVectorIndex] = '1';
+        sparseMatrix[rightwardVectorIndex][j] = '1';
+      }
+    }
+  }
+  // console.log('sparseMatrix', sparseMatrix)
+  return sparseMatrix;
+}
+exports.makeSparseMatrix = makeSparseMatrix;
+function vectorStringToBase10Array(nums) {
+  if (typeof nums !== 'string') {
+    console.log('array of input numbers should be a string');
+    return;
+  }
+  var b10Array = [];
+  nums.split(',').forEach(function (num) {
+    try {
+      var b10num = parseInt(num, 10);
+      // console.log(b10num)
+      if (isNaN(b10num)) throw new Error('not a number=' + num);
+      b10Array.push(b10num);
+    } catch (e) {
+      console.error(e);
+    }
+  });
+  // console.log('b10Array', b10Array)
+  return b10Array;
+}
+exports.vectorStringToBase10Array = vectorStringToBase10Array;
+function base10ArrayToBase2Array(b10Array, padding) {
+  var maxScale = 0;
+  var b2Array = b10Array.map(function (num) {
+    var binaryString = num.toString(2);
+    // console.log(num, binaryString)
+    if (binaryString.length > maxScale) maxScale = binaryString.length;
+    return binaryString;
+  });
+  // console.log('maxScale', maxScale)
+  b2Array = b2Array.map(function (b2numString) {
+    return b2numString.padStart(maxScale + padding, '0');
+  });
+  return b2Array;
+}
+exports.base10ArrayToBase2Array = base10ArrayToBase2Array;
+
+},{}],2:[function(require,module,exports){
 'use strict';
 
 var plankGraph = require('./plankGraph');
@@ -7,14 +112,14 @@ document.addEventListener('DOMContentLoaded', function () {
   plankGraph();
 });
 
-},{"./plankGraph":2}],2:[function(require,module,exports){
+},{"./plankGraph":3}],3:[function(require,module,exports){
 "use strict";
 
-var Library = require('../library');
+var Library = require('./library');
 var excessVectorPadding = 6;
 var NS = 'http://www.w3.org/2000/svg';
 // const padding = 20
-var layout = "\n<div class=\"pg-container\">\n  <form action=\"/graph/save\" method=\"POST\">\n  <h3 class=\"title\">Plank Graph of: <span class=\"vector-string\"></span></h3>\n  <input type=\"text\" value=\"\" name=\"name\" hidden></input>\n  <a href=\"#\" class=\"view-interactive\">Open as Interactive</a>\n  <div class=\"svg-container\"></div>\n  <div class=\"monte-carlo\"></div>\n  <div class=\"info\">\n    <button type=\"submit\" class=\"btn btn-success\" >Save Graph</button>\n  </div>\n  <style>\n\n    .pg-container .svg-container {\n      max-width: 100%;\n      overflow-y: scroll;\n      overflow-y: hidden;\n    }\n    .pg-container svg.plank circle{\n      fill: white;\n      stroke: black;\n      stroke-width: 1px;\n    }\n\n    .pg-container h3 {\n      display: inline;\n    }\n\n    .pg-container a.view-interactive {\n      margin-left: 20px;\n    }\n\n    .pg-container svg.plank circle.matrix-element:hover {\n      stroke: red;\n      cursor: pointer;\n    }\n\n    .pg-container svg circle.origin-circle:hover {\n      cursor: pointer;\n    }\n\n    .pg-container svg text.origin-circle:hover {\n      cursor: pointer;\n    }\n\n    .pg-container svg circle.origin-circle.non-compliant {\n      fill: #ff7575;\n    }\n\n    .pg-container svg circle.origin-circle.compliant {\n      fill: #5abf5a;\n    }\n\n    .pg-container svg circle.origin-circle.blink {\n      fill: #741bbd;\n    }\n\n\n    .pg-container svg.plank circle.filled{\n      fill: black;\n    }\n\n    .pg-container input[name=\"name\"] {\n      width: 84rem;\n      border: none;\n    }\n\n    .pg-container button[type=\"submit\"] {\n      display: none;\n    }\n  </style>\n  </form>\n</div>\n";
+var layout = "\n<div class=\"pg-container\">\n  <form action=\"/graph/save\" method=\"POST\">\n  <h3 class=\"title\">Plank Graph of: <span class=\"vector-string\"></span></h3>\n  <input type=\"text\" value=\"\" name=\"name\" hidden></input>\n  <a href=\"#\" class=\"view-interactive\">Open as Interactive</a>\n  <div class=\"svg-container\"></div>\n  <h4>Sparse Matrix Representation</h4>\n  <div class=\"sparse-matrix-container\"></div>\n  <div class=\"info\">\n    <button type=\"submit\" class=\"btn btn-success\" >Save Graph</button>\n  </div>\n  <style>\n\n    .pg-container .svg-container {\n      max-width: 100%;\n      overflow-y: scroll;\n      overflow-y: hidden;\n    }\n    .pg-container svg.plank circle{\n      fill: white;\n      stroke: black;\n      stroke-width: 1px;\n    }\n\n    .pg-container h3 {\n      display: inline;\n    }\n\n    .pg-container a.view-interactive {\n      margin-left: 20px;\n    }\n\n    .pg-container svg.plank circle.matrix-element:hover {\n      stroke: red;\n      cursor: pointer;\n    }\n\n    .pg-container svg circle.origin-circle:hover {\n      cursor: pointer;\n    }\n\n    .pg-container svg text.origin-circle:hover {\n      cursor: pointer;\n    }\n\n    .pg-container svg circle.origin-circle.non-compliant {\n      fill: #ff7575;\n    }\n\n    .pg-container svg circle.origin-circle.compliant {\n      fill: #5abf5a;\n    }\n\n    .pg-container svg circle.origin-circle.blink {\n      fill: #741bbd;\n    }\n\n\n    .pg-container svg.plank circle.filled{\n      fill: black;\n    }\n\n    .pg-container input[name=\"name\"] {\n      width: 84rem;\n      border: none;\n    }\n\n    .pg-container button[type=\"submit\"] {\n      display: none;\n    }\n  </style>\n  </form>\n</div>\n";
 function init() {
   console.log('init');
   if (document.getElementsByClassName('plank-graph').length > 0) {
@@ -83,16 +188,54 @@ function createGraph(graphEl) {
   if (graphEl.getAttribute('readonly') === 'false') {
     var complianceVector = Library.validateVectorString(graphEl.dataset.starting);
     applyComplianceVector(svg, complianceVector);
+    createSpareMatrix();
   }
-  monteCarloSimulation();
 
   // end main createGraph body
 
-  function monteCarloSimulation() {
+  function createSpareMatrix() {
     // monto carlo volume approximation of how volume grows with radius, start with j=0
-    console.log('monteCarloSimulation');
+    console.log('createSpareMatrix');
+    var squareSize = 10;
     var vectorString = graphEl.querySelector('span.vector-string').textContent;
     var matrix = Library.makeSparseMatrix(vectorString);
+    var svg = document.createElementNS(NS, 'svg');
+    var height = matrix.length * squareSize;
+    var width = matrix.length * squareSize;
+    var yOffset = function yOffset(m) {
+      return m * squareSize;
+    };
+    var xOffset = function xOffset(n) {
+      return n * squareSize;
+    };
+    svg.setAttributeNS(NS, 'viewBox', "".concat(0, " ", 0, " ", width, " ").concat(height));
+    svg.style.height = height + 'px';
+    svg.style.width = width + 'px';
+    svg.style.backgroundColor = '#d3d3d333';
+    svg.classList.add('sparse-matrix');
+    var svgContainer = graphEl.querySelector('div.sparse-matrix-container');
+    svgContainer.appendChild(svg);
+    var sparseMatrix = Library.makeSparseMatrix(vectorString);
+    console.log(sparseMatrix);
+    for (var j = 0; j < sparseMatrix.length; j++) {
+      //rows
+      for (var _i3 = 0; _i3 < sparseMatrix[j].length; _i3++) {
+        //columns
+        addMatrixSquare(j, _i3, sparseMatrix[j][_i3]);
+      }
+    }
+    function addMatrixSquare(j, i, value) {
+      var square = document.createElementNS(NS, 'rect');
+      square.setAttribute('y', yOffset(j));
+      square.setAttribute('x', xOffset(i));
+      square.setAttribute('width', squareSize);
+      square.setAttribute('height', squareSize);
+      // square.id = 'sparse-element-' + i + '-' + i
+      square.setAttribute('stroke', 'black');
+      square.setAttribute('fill', value === '1' ? 'black' : 'white');
+      // square.classList.add('origin-circle')
+      svg.appendChild(square);
+    }
   }
   function addVectorCircles(svg, i) {
     // in offset coordinates, i is vector number
@@ -251,109 +394,4 @@ function createGraph(graphEl) {
 }
 module.exports = init;
 
-},{"../library":3}],3:[function(require,module,exports){
-"use strict";
-
-function validateVectorString(vectorString) {
-  // console.log(vectorString)
-  var base10Array = vectorStringToBase10Array(vectorString);
-  var base2Array = base10ArrayToBase2Array(base10Array, 0);
-  // console.log('base2Array', base2Array)
-  //  each vector still in reverse order and still a string base 2
-  var vectors = base2Array.map(function (vectorString) {
-    var inGraphOrderArray = vectorString.split('').reverse();
-    inGraphOrderArray.unshift('0');
-    return inGraphOrderArray.join('');
-  });
-  // console.log('vectors', vectors) // example  [ "01100", "00001", "01100", "00001", "01100", "00001", "01100", "00001", "01100", "00001", … ]
-  var resultsArray = [];
-  for (var j = 0; j < vectors.length; j++) {
-    // j is the "row" or number of vector
-    var count = 0;
-    // console.log('j', j)
-    for (var i = 0; i < vectors[j].length; i++) {
-      if (vectors[j][i] === '1') count++;
-      // console.log('rightwardVectorIndes',j,i)
-      var leftwardVectorIndex = (vectors.length + j - i) % vectors.length;
-      // console.log('leftwardVectorIndeces', leftwardVector, i)
-      if (vectors[leftwardVectorIndex][i] === '1') count++;
-    }
-    resultsArray.push(count === 3);
-  }
-  // console.log('resultsArray', resultsArray)
-  return resultsArray;
-}
-exports.validateVectorString = validateVectorString;
-function makeSparseMatrix(vectorString) {
-  var base10Array = vectorStringToBase10Array(vectorString);
-  var base2Array = base10ArrayToBase2Array(base10Array, 0);
-  // console.log('base2Array', base2Array)
-  //  each vector still in reverse order and still a string base 2
-  var vectors = base2Array.map(function (vectorString) {
-    var inGraphOrderArray = vectorString.split('').reverse();
-    inGraphOrderArray.unshift('0');
-    return inGraphOrderArray.join('');
-  });
-
-  // console.log('vectors in makeSparseMatrix', vectors)
-  var sparseMatrix = [];
-  for (var m = 0; m < vectors.length; m++) {
-    // make l x l matrix
-    var row = new Array(vectors.length).fill('0'); // recursive fills leaves behind pointers apparently!
-    sparseMatrix.push(row);
-  }
-  // console.log('sparseMatrix', sparseMatrix)
-  for (var j = 0; j < vectors.length; j++) {
-    // j is the "row" or number of vector
-    for (var i = 0; i < vectors[j].length; i++) {
-      // i is the index of the vector, with origin
-      if (vectors[j][i] === '1') {
-        // this is a 'dot' on the interactive view, regarding element j
-        var rightwardVectorIndex = (j + i) % vectors.length;
-        // console.log('(j, rightwardVectorIndex)', j, rightwardVectorIndex)
-        sparseMatrix[j][rightwardVectorIndex] = '1';
-        sparseMatrix[rightwardVectorIndex][j] = '1';
-      }
-    }
-  }
-  // console.log('sparseMatrix', sparseMatrix)
-  return sparseMatrix;
-}
-exports.makeSparseMatrix = makeSparseMatrix;
-function vectorStringToBase10Array(nums) {
-  if (typeof nums !== 'string') {
-    console.log('array of input numbers should be a string');
-    return;
-  }
-  var b10Array = [];
-  nums.split(',').forEach(function (num) {
-    try {
-      var b10num = parseInt(num, 10);
-      // console.log(b10num)
-      if (isNaN(b10num)) throw new Error('not a number=' + num);
-      b10Array.push(b10num);
-    } catch (e) {
-      console.error(e);
-    }
-  });
-  // console.log('b10Array', b10Array)
-  return b10Array;
-}
-exports.vectorStringToBase10Array = vectorStringToBase10Array;
-function base10ArrayToBase2Array(b10Array, padding) {
-  var maxScale = 0;
-  var b2Array = b10Array.map(function (num) {
-    var binaryString = num.toString(2);
-    // console.log(num, binaryString)
-    if (binaryString.length > maxScale) maxScale = binaryString.length;
-    return binaryString;
-  });
-  // console.log('maxScale', maxScale)
-  b2Array = b2Array.map(function (b2numString) {
-    return b2numString.padStart(maxScale + padding, '0');
-  });
-  return b2Array;
-}
-exports.base10ArrayToBase2Array = base10ArrayToBase2Array;
-
-},{}]},{},[1]);
+},{"./library":1}]},{},[2]);
