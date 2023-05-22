@@ -19,3 +19,17 @@ Each graph can be viewed in "interactive" mode, where the user can "play" with i
 ## The Art
 
 These are incredible structures, the most beautiful mathematic structures I've ever seen. They extend infinately, and are unimaginable shapes and forms. After many months of trying to display the hypergraphs on the screen, I found that the best way to represent them is in fact as the diagonal of a sparse matrix. We will also create sparse matrices, that wrap back upon themselves in order to determine the dimensionality and metrics of that space. This avoids the entire problem of rendering them as a web view or a picture. They live only in our minds, for now, but we can still determine their properties!
+
+## The Rules
+
+There is only one rule.
+
+** Each Element relates to exactly three others. No more, no less **
+
+For this one rule, uncountably many beatiful structures are formed. 
+
+I have found, through playing with the interactive view that there is a sort of pattern to how one can move the "dots" around the matrix diagonal, however I cannot express them in words. I would love to work with somebody who can start to describe these patterns, I think they are key too understanding our physical reality, and are in some way related to Feynmann diagrams! Holy cow!
+
+## My Goal for this Project
+
+This is public and open source. I feel that this knowledge is so important that no person can or should claim authorship. Personally, I feel, like Nikola Tesla, that though I have put much personal effort into this way of thinking, that I have and continue to have help that I cannot fully explain. I encourage you to think of it that way as well, because Absolute Truth is discoverably only through humility, and not selfish motivations. If this in fact a Grand Unified Theory, all people shoud benefit, not just me, or you. Knowledge is, and should always be, free, to serve the benefit of mankind.
