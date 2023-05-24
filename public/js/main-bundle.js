@@ -1,6 +1,7 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 "use strict";
 
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 function validateVectorString(vectorString) {
   // console.log(vectorString)
   var base10Array = vectorStringToBase10Array(vectorString);
@@ -67,6 +68,17 @@ function makeSparseMatrix(vectorString) {
   return sparseMatrix;
 }
 exports.makeSparseMatrix = makeSparseMatrix;
+
+// function findAdjascentElements (matrix, j) {
+//   const results = []
+//   for (let i = 0; i < matrix[j].length; i ++) {
+//     if (matrix [j][i] === '1') results.push(i)
+//   }
+//   return results
+// }
+
+// exports.findAdjascentElements = findAdjascentElements
+
 function vectorStringToBase10Array(nums) {
   if (typeof nums !== 'string') {
     console.log('array of input numbers should be a string');
@@ -87,6 +99,36 @@ function vectorStringToBase10Array(nums) {
   return b10Array;
 }
 exports.vectorStringToBase10Array = vectorStringToBase10Array;
+function createRelationsObjectFromSparseMatrix(matrix) {
+  var relations = {};
+  for (var j = 0; j < matrix.length; j++) {
+    for (var i = 0; i < matrix[j].length; i++) {
+      if (matrix[j][i] === '1') {
+        if (_typeof(relations[j]) !== 'object') {
+          relations[j] = {};
+        }
+        relations[j][i] = true;
+      }
+    }
+  }
+  return relations;
+}
+exports.createRelationsObjectFromSparseMatrix = createRelationsObjectFromSparseMatrix;
+
+// function sort_unique(arr) {
+//   if (arr.length === 0) return arr;
+//   arr = arr.sort(function (a, b) { return a*1 - b*1; });
+//   var ret = [arr[0]];
+//   for (var i = 1; i < arr.length; i++) { //Start loop at 1: arr[0] can never be a duplicate
+//     if (arr[i-1] !== arr[i]) {
+//       ret.push(arr[i]);
+//     }
+//   }
+//   return ret;
+// }
+
+// exports.sort_unique = sort_unique
+
 function base10ArrayToBase2Array(b10Array, padding) {
   var maxScale = 0;
   var b2Array = b10Array.map(function (num) {
@@ -119,7 +161,7 @@ var Library = require('./library');
 var excessVectorPadding = 6;
 var NS = 'http://www.w3.org/2000/svg';
 // const padding = 20
-var layout = "\n<div class=\"pg-container\">\n  <form action=\"/graph/save\" method=\"POST\">\n  <h3 class=\"title\">Plank Graph of: <span class=\"vector-string\"></span></h3>\n  <input type=\"text\" value=\"\" name=\"name\" hidden></input>\n  <a href=\"#\" class=\"view-interactive\">Open as Interactive</a>\n  <div class=\"svg-container\"></div>\n  <h4>Sparse Matrix Representation</h4>\n  <div class=\"sparse-matrix-container\"></div>\n  <div class=\"info\">\n    <button type=\"submit\" class=\"btn btn-success\" >Save Graph</button>\n  </div>\n  <style>\n\n    .pg-container .svg-container {\n      max-width: 100%;\n      overflow-y: scroll;\n      overflow-y: hidden;\n    }\n    .pg-container svg.plank circle{\n      fill: white;\n      stroke: black;\n      stroke-width: 1px;\n    }\n\n    .pg-container h3 {\n      display: inline;\n    }\n\n    .pg-container a.view-interactive {\n      margin-left: 20px;\n    }\n\n    .pg-container svg.plank circle.matrix-element:hover {\n      stroke: red;\n      cursor: pointer;\n    }\n\n    .pg-container svg circle.origin-circle:hover {\n      cursor: pointer;\n    }\n\n    .pg-container svg text.origin-circle:hover {\n      cursor: pointer;\n    }\n\n    .pg-container svg circle.origin-circle.non-compliant {\n      fill: #ff7575;\n    }\n\n    .pg-container svg circle.origin-circle.compliant {\n      fill: #5abf5a;\n    }\n\n    .pg-container svg circle.origin-circle.blink {\n      fill: #741bbd;\n    }\n\n\n    .pg-container svg.plank circle.filled{\n      fill: black;\n    }\n\n    .pg-container input[name=\"name\"] {\n      width: 84rem;\n      border: none;\n    }\n\n    .pg-container button[type=\"submit\"] {\n      display: none;\n    }\n  </style>\n  </form>\n</div>\n";
+var layout = "\n<div class=\"pg-container\">\n  <form action=\"/graph/save\" method=\"POST\">\n  <h3 class=\"title\">Plank Graph of: <span class=\"vector-string\"></span></h3>\n  <input type=\"text\" value=\"\" name=\"name\" hidden></input>\n  <a href=\"#\" class=\"view-interactive\">Open as Interactive</a>\n  <div class=\"svg-container\"></div>\n  \n  <div class=\"sparse-matrix-container\">\n    <h4>Sparse Matrix Representation</h4>\n  </div>\n  <div class=\"metrics-container\">\n    <h4>Metrics</h4>\n  </div>\n  <div class=\"dimensionality-container\">\n    <h4>Shells of Dimensionality</h4>\n  </div>\n \n  <div class=\"info\">\n    <button type=\"submit\" class=\"btn btn-success\" >Save Graph</button>\n  </div>\n  <style>\n\n    .pg-container .svg-container {\n      max-width: 100%;\n      width: 100%;\n      overflow-y: scroll;\n      overflow-y: hidden;\n    }\n    .pg-container svg.plank circle{\n      fill: white;\n      stroke: black;\n      stroke-width: 1px;\n    }\n\n    .pg-container h3 {\n      display: inline;\n    }\n\n    .pg-container a.view-interactive {\n      margin-left: 20px;\n    }\n\n    .pg-container svg.plank circle.matrix-element:hover {\n      stroke: red;\n      cursor: pointer;\n    }\n\n    .pg-container svg circle.origin-circle:hover {\n      cursor: pointer;\n    }\n\n    .pg-container svg text.origin-circle:hover {\n      cursor: pointer;\n    }\n\n    .pg-container svg circle.origin-circle.non-compliant {\n      fill: #ff7575;\n    }\n\n    .pg-container svg circle.origin-circle.compliant {\n      fill: #5abf5a;\n    }\n\n    .pg-container svg circle.origin-circle.blink {\n      fill: #741bbd;\n    }\n\n\n    .pg-container svg.plank circle.filled{\n      fill: black;\n    }\n\n    .pg-container .sparse-matrix-container {\n      display: none;\n      width: 33.3%;\n      overflow-y: scroll;\n      overflow-y: hidden;\n    }\n\n    .pg-container .dimensionality-container {\n      display: none;\n      width: 33.3%;\n      float: right;\n      overflow-y: scroll;\n      overflow-y: hidden;\n    }\n\n    .pg-container .metrics-container {\n      display: none;\n      width: 33.3%;\n      float: right;\n      overflow-y: scroll;\n      overflow-y: hidden;\n    }\n\n    .pg-container input[name=\"name\"] {\n      width: 84rem;\n      border: none;\n    }\n\n    .pg-container button[type=\"submit\"] {\n      display: none;\n    }\n  </style>\n  </form>\n</div>\n";
 function init() {
   console.log('init');
   if (document.getElementsByClassName('plank-graph').length > 0) {
@@ -186,9 +228,13 @@ function createGraph(graphEl) {
   }
 
   if (graphEl.getAttribute('readonly') === 'false') {
+    // interactive mode
+    graphEl.querySelector('div.sparse-matrix-container').style.display = 'inline-block';
+    graphEl.querySelector('div.dimensionality-container').style.display = 'inline-block';
+    graphEl.querySelector('div.metrics-container').style.display = 'inline-block';
     var complianceVector = Library.validateVectorString(graphEl.dataset.starting);
     applyComplianceVector(svg, complianceVector);
-    createSpareMatrix();
+    createSpareMatrix(); // also creates dimensionality graph and metrics
   }
 
   // end main createGraph body
@@ -216,7 +262,7 @@ function createGraph(graphEl) {
     var svgContainer = graphEl.querySelector('div.sparse-matrix-container');
     svgContainer.appendChild(svg);
     var sparseMatrix = Library.makeSparseMatrix(vectorString);
-    console.log(sparseMatrix);
+    // console.log(sparseMatrix)
     for (var j = 0; j < sparseMatrix.length; j++) {
       //rows
       for (var _i3 = 0; _i3 < sparseMatrix[j].length; _i3++) {
@@ -224,6 +270,7 @@ function createGraph(graphEl) {
         addMatrixSquare(j, _i3, sparseMatrix[j][_i3]);
       }
     }
+    createDimensionalityGraph(matrix);
     function addMatrixSquare(j, i, value) {
       var square = document.createElementNS(NS, 'rect');
       square.setAttribute('y', yOffset(j));
@@ -236,6 +283,57 @@ function createGraph(graphEl) {
       square.setAttribute('fill', value === '1' ? 'black' : 'white');
       // square.classList.add('origin-circle')
       svg.appendChild(square);
+    }
+  }
+  function createDimensionalityGraph(matrix) {
+    var startingIndex = Math.floor(matrix.length / 2);
+    console.log('create dimensionality graph starting at index=', startingIndex);
+    // const connectedElements = Library.findAdjascentElements(matrix, startingIndex)
+    // console.log(startingIndex, 'is connected to', connectedElements)
+    var maxDepth = 7;
+    // const maxShellLength = 50
+    var relationsObject = Library.createRelationsObjectFromSparseMatrix(matrix); // fastest way
+    /*
+    { 0 : {
+            1 : true,
+            4: true,
+            5: true
+          },
+      1: {
+            0: true,
+            7: true,
+            9:true
+          }
+      ...
+    }
+    */
+    console.log('relationsObject', relationsObject);
+    var worldPaths = [[startingIndex]];
+    appendWorldPath(worldPaths[0]);
+    var worldPathStrings = worldPaths.map(function (a) {
+      return a.join(',');
+    });
+    console.log('worldPaths', worldPathStrings);
+    function appendWorldPath(pathArray) {
+      // start with the array children
+      if (pathArray.length >= maxDepth) return;
+      var lastElement = pathArray[pathArray.length - 1];
+      var connectedElements = Object.keys(relationsObject[lastElement]).map(function (el) {
+        return 1 * el;
+      });
+      console.log('connectedElements', connectedElements);
+      for (var _i4 in connectedElements) {
+        var newPathArray = pathArray.map(function (x) {
+          return 1 * x;
+        });
+        var newElement = connectedElements[_i4];
+        if (!newPathArray.includes(newElement)) {
+          // if we haven't visited that element before, on this path
+          newPathArray.push(newElement);
+          worldPaths.push(newPathArray);
+          appendWorldPath(newPathArray);
+        }
+      }
     }
   }
   function addVectorCircles(svg, i) {

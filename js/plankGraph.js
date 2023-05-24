@@ -9,8 +9,17 @@ const layout = `
   <input type="text" value="" name="name" hidden></input>
   <a href="#" class="view-interactive">Open as Interactive</a>
   <div class="svg-container"></div>
-  <h4>Sparse Matrix Representation</h4>
-  <div class="sparse-matrix-container"></div>
+  
+  <div class="sparse-matrix-container">
+    <h4>Sparse Matrix Representation</h4>
+  </div>
+  <div class="metrics-container">
+    <h4>Metrics</h4>
+  </div>
+  <div class="dimensionality-container">
+    <h4>Shells of Dimensionality</h4>
+  </div>
+ 
   <div class="info">
     <button type="submit" class="btn btn-success" >Save Graph</button>
   </div>
@@ -18,6 +27,7 @@ const layout = `
 
     .pg-container .svg-container {
       max-width: 100%;
+      width: 100%;
       overflow-y: scroll;
       overflow-y: hidden;
     }
@@ -63,6 +73,29 @@ const layout = `
 
     .pg-container svg.plank circle.filled{
       fill: black;
+    }
+
+    .pg-container .sparse-matrix-container {
+      display: none;
+      width: 33.3%;
+      overflow-y: scroll;
+      overflow-y: hidden;
+    }
+
+    .pg-container .dimensionality-container {
+      display: none;
+      width: 33.3%;
+      float: right;
+      overflow-y: scroll;
+      overflow-y: hidden;
+    }
+
+    .pg-container .metrics-container {
+      display: none;
+      width: 33.3%;
+      float: right;
+      overflow-y: scroll;
+      overflow-y: hidden;
     }
 
     .pg-container input[name="name"] {
@@ -136,10 +169,14 @@ function createGraph (graphEl) { // in standard cartesian coordinates
   for (let i = 0; i < vectorCount; i++) {
     addVectorCircles(svg, i) // important dots
   }
-  if (graphEl.getAttribute('readonly') === 'false') {
+  if (graphEl.getAttribute('readonly') === 'false') { // interactive mode
+    graphEl.querySelector('div.sparse-matrix-container').style.display = 'inline-block'
+    graphEl.querySelector('div.dimensionality-container').style.display = 'inline-block'
+    graphEl.querySelector('div.metrics-container').style.display = 'inline-block'
     const complianceVector = Library.validateVectorString(graphEl.dataset.starting)
     applyComplianceVector(svg, complianceVector)
-    createSpareMatrix()
+    createSpareMatrix()  // also creates dimensionality graph and metrics
+    
   }
  
   // end main createGraph body
@@ -162,12 +199,13 @@ function createGraph (graphEl) { // in standard cartesian coordinates
     const svgContainer = graphEl.querySelector('div.sparse-matrix-container')
     svgContainer.appendChild(svg)
     const sparseMatrix = Library.makeSparseMatrix(vectorString)
-    console.log(sparseMatrix)
+    // console.log(sparseMatrix)
     for (let j = 0; j < sparseMatrix.length; j++){ //rows
       for (let i= 0; i < sparseMatrix[j].length; i++) { //columns
         addMatrixSquare(j, i, sparseMatrix[j][i])
       }
     }
+    createDimensionalityGraph(matrix)
 
     function addMatrixSquare (j, i, value) {
       const square = document.createElementNS(NS,'rect')
@@ -182,6 +220,55 @@ function createGraph (graphEl) { // in standard cartesian coordinates
       // square.classList.add('origin-circle')
       svg.appendChild(square)
     }
+  }
+
+  function createDimensionalityGraph (matrix) {
+    const startingIndex = Math.floor(matrix.length / 2)
+    console.log('create dimensionality graph starting at index=', startingIndex)
+    // const connectedElements = Library.findAdjascentElements(matrix, startingIndex)
+    // console.log(startingIndex, 'is connected to', connectedElements)
+    const maxDepth = 7
+    // const maxShellLength = 50
+    const relationsObject = Library.createRelationsObjectFromSparseMatrix(matrix) // fastest way
+    /*
+    { 0 : {
+            1 : true,
+            4: true,
+            5: true
+          },
+      1: {
+            0: true,
+            7: true,
+            9:true
+          }
+      ...
+    }
+    */
+   console.log('relationsObject', relationsObject)
+   const worldPaths = [[startingIndex]]
+   
+   appendWorldPath(worldPaths[0])
+   const worldPathStrings =  worldPaths.map(a => a.join(','))
+   console.log('worldPaths', worldPathStrings)
+
+   function appendWorldPath (pathArray) { // start with the array children
+    if (pathArray.length >= maxDepth  ) return
+    const lastElement = pathArray[pathArray.length - 1]
+    const connectedElements = Object.keys(relationsObject[lastElement]).map(el => 1 * el)
+    console.log('connectedElements', connectedElements)
+    for (const i in connectedElements) {
+      const newPathArray = pathArray.map(x => 1 * x)
+      const newElement = connectedElements[i]
+      if (!newPathArray.includes(newElement)) { // if we haven't visited that element before, on this path
+        newPathArray.push(newElement)
+        worldPaths.push(newPathArray)
+        appendWorldPath(newPathArray)
+      }
+      
+    }
+   }
+
+   
   }
 
   function addVectorCircles (svg, i) { // in offset coordinates, i is vector number

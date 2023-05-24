@@ -65,6 +65,16 @@ function makeSparseMatrix (vectorString) {
 
 exports.makeSparseMatrix = makeSparseMatrix
 
+// function findAdjascentElements (matrix, j) {
+//   const results = []
+//   for (let i = 0; i < matrix[j].length; i ++) {
+//     if (matrix [j][i] === '1') results.push(i)
+//   }
+//   return results
+// }
+
+// exports.findAdjascentElements = findAdjascentElements
+
 function vectorStringToBase10Array(nums) {
   if (typeof nums !== 'string') {
     console.log('array of input numbers should be a string')
@@ -86,6 +96,37 @@ function vectorStringToBase10Array(nums) {
 }
 
 exports.vectorStringToBase10Array = vectorStringToBase10Array
+
+function createRelationsObjectFromSparseMatrix (matrix) {
+  const relations = {}
+  for (let j = 0; j < matrix.length; j++ ) {
+    for (let i = 0; i < matrix[j].length; i++) {
+      if (matrix[j][i] === '1') {
+        if (typeof relations[j] !== 'object' ) {
+          relations[j] = {}
+        }
+        relations[j][i] = true
+      }
+    }
+  }
+  return relations
+}
+
+exports.createRelationsObjectFromSparseMatrix = createRelationsObjectFromSparseMatrix
+
+// function sort_unique(arr) {
+//   if (arr.length === 0) return arr;
+//   arr = arr.sort(function (a, b) { return a*1 - b*1; });
+//   var ret = [arr[0]];
+//   for (var i = 1; i < arr.length; i++) { //Start loop at 1: arr[0] can never be a duplicate
+//     if (arr[i-1] !== arr[i]) {
+//       ret.push(arr[i]);
+//     }
+//   }
+//   return ret;
+// }
+
+// exports.sort_unique = sort_unique
 
 function base10ArrayToBase2Array(b10Array, padding) {
   let maxScale = 0
