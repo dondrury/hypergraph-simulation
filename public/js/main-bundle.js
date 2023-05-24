@@ -290,7 +290,7 @@ function createGraph(graphEl) {
     console.log('create dimensionality graph starting at index=', startingIndex);
     // const connectedElements = Library.findAdjascentElements(matrix, startingIndex)
     // console.log(startingIndex, 'is connected to', connectedElements)
-    var maxDepth = 7;
+    var maxDepth = 10;
     // const maxShellLength = 50
     var relationsObject = Library.createRelationsObjectFromSparseMatrix(matrix); // fastest way
     /*
@@ -310,10 +310,29 @@ function createGraph(graphEl) {
     console.log('relationsObject', relationsObject);
     var worldPaths = [[startingIndex]];
     appendWorldPath(worldPaths[0]);
-    var worldPathStrings = worldPaths.map(function (a) {
-      return a.join(',');
-    });
-    console.log('worldPaths', worldPathStrings);
+    console.log('worldPaths', worldPaths);
+    var shells = [];
+    for (var _i4 = 0; _i4 <= maxDepth; _i4++) {
+      shells.push({
+        shellNumber: _i4,
+        numberOfPaths: 0,
+        endingElements: []
+      });
+    }
+    //  console.log('shellsEmpty', shells)
+    for (var _i5 in worldPaths) {
+      var worldPath = worldPaths[_i5];
+      // console.log(worldPath)
+      var pathLength = worldPath.length;
+      // console.log(pathLength)
+      shells[pathLength].numberOfPaths++;
+      var endingElement = worldPath[worldPath.length - 1];
+      // console.log({endingElement})
+      if (!shells[pathLength].endingElements.includes(endingElement)) {
+        shells[pathLength].endingElements.push(endingElement);
+      }
+    }
+    console.log('shells', shells);
     function appendWorldPath(pathArray) {
       // start with the array children
       if (pathArray.length >= maxDepth) return;
@@ -321,12 +340,12 @@ function createGraph(graphEl) {
       var connectedElements = Object.keys(relationsObject[lastElement]).map(function (el) {
         return 1 * el;
       });
-      console.log('connectedElements', connectedElements);
-      for (var _i4 in connectedElements) {
+      // console.log('connectedElements', connectedElements)
+      for (var _i6 in connectedElements) {
         var newPathArray = pathArray.map(function (x) {
           return 1 * x;
         });
-        var newElement = connectedElements[_i4];
+        var newElement = connectedElements[_i6];
         if (!newPathArray.includes(newElement)) {
           // if we haven't visited that element before, on this path
           newPathArray.push(newElement);

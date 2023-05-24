@@ -227,7 +227,7 @@ function createGraph (graphEl) { // in standard cartesian coordinates
     console.log('create dimensionality graph starting at index=', startingIndex)
     // const connectedElements = Library.findAdjascentElements(matrix, startingIndex)
     // console.log(startingIndex, 'is connected to', connectedElements)
-    const maxDepth = 7
+    const maxDepth = 10
     // const maxShellLength = 50
     const relationsObject = Library.createRelationsObjectFromSparseMatrix(matrix) // fastest way
     /*
@@ -248,14 +248,37 @@ function createGraph (graphEl) { // in standard cartesian coordinates
    const worldPaths = [[startingIndex]]
    
    appendWorldPath(worldPaths[0])
-   const worldPathStrings =  worldPaths.map(a => a.join(','))
-   console.log('worldPaths', worldPathStrings)
+
+   console.log('worldPaths', worldPaths)
+   const shells = []
+   for (let i = 0; i <= maxDepth; i++) {
+    shells.push({
+      shellNumber: i,
+      numberOfPaths: 0,
+      endingElements: []
+    })
+   }
+  //  console.log('shellsEmpty', shells)
+   for (const i in worldPaths) {
+    const worldPath = worldPaths[i]
+    // console.log(worldPath)
+    const pathLength = worldPath.length
+    // console.log(pathLength)
+    shells[pathLength].numberOfPaths++
+    const endingElement = worldPath[worldPath.length - 1]
+    // console.log({endingElement})
+    if (!shells[pathLength].endingElements.includes(endingElement)) {
+      shells[pathLength].endingElements.push(endingElement)
+    }
+   }
+   console.log('shells', shells)
+
 
    function appendWorldPath (pathArray) { // start with the array children
     if (pathArray.length >= maxDepth  ) return
     const lastElement = pathArray[pathArray.length - 1]
     const connectedElements = Object.keys(relationsObject[lastElement]).map(el => 1 * el)
-    console.log('connectedElements', connectedElements)
+    // console.log('connectedElements', connectedElements)
     for (const i in connectedElements) {
       const newPathArray = pathArray.map(x => 1 * x)
       const newElement = connectedElements[i]
