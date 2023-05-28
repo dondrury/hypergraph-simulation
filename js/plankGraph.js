@@ -48,6 +48,10 @@ const layout = `
       stroke-width: 1px;
     }
 
+    .pg-container span.vector-string {
+      word-wrap: break-word;
+    }
+
     .pg-container h3 {
       display: inline;
     }
@@ -95,10 +99,6 @@ const layout = `
 
     .pg-container .effect-container {
       display: none;
-      // width: 33.3%;
-      // float: right;
-      // overflow-y: scroll;
-      // overflow-y: hidden;
       padding: 5px;
     }
 
@@ -121,7 +121,7 @@ const layout = `
     }
 
     .pg-container div.shells-container {
-      height: 300px;
+      // height: 300px;
     }
 
     .pg-container div.shells-container > div.shell {
@@ -137,14 +137,12 @@ const layout = `
     }
     .pg-container div.shells-container div.shell-element {
       display: inline-block;
-      background-color: black;
-      // border: 1px solid black;
       height: 100%;
       color: black;
-      font-size:10px;
       text-align: center;
       margin-bottom:0px;
-      line-height: 3;
+      padding-top: 7px;
+      font-size: 12px;
     }
   </style>
   </form>
@@ -175,7 +173,7 @@ function createGraph (graphEl) { // in standard cartesian coordinates
     graphEl.querySelector('button[type="submit"]').style.display = 'block'
     graphEl.querySelector('a.view-interactive').style.display = 'none'
   }
-  const href = graphEl.querySelector('a').setAttribute('href', '/graph/byId?name=' + encodeURIComponent(b10Array.join(',')))
+  // const href = graphEl.querySelector('a').setAttribute('href', '/graph/byId?name=' + encodeURIComponent(b10Array.join(',')))
   const b2Array = Library.base10ArrayToBase2Array(b10Array, excessVectorPadding)
   const scale = b2Array[0].length
   // console.log('scale', scale)
@@ -267,7 +265,7 @@ function createGraph (graphEl) { // in standard cartesian coordinates
     const startingIndex = Math.ceil(matrix.length / 2) + 1
     graphEl.querySelector('span.startingIndex').innerText = startingIndex
     console.log('create effect graph starting at index=', startingIndex)
-    const maxDepth = 10
+    const maxDepth = 13
     graphEl.querySelector('span.maxDepth').innerText = maxDepth
     const relationsObject = Library.createRelationsObjectFromSparseMatrix(matrix) // fastest way
     console.log('relationsObject', relationsObject)
@@ -284,7 +282,7 @@ function createGraph (graphEl) { // in standard cartesian coordinates
     shells.forEach((shell, i) => {
       if (i == 0) return
       const shellEl = document.createElement('div')
-      shellEl.style.height = Math.ceil(100/shells.length) + '%'
+      // shellEl.style.height = Math.ceil(100/shells.length) + '%'
       shellEl.className = 'shell'
       shellsContainerEl.appendChild(shellEl)
       const shellElementContainer = document.createElement('div')
@@ -297,11 +295,13 @@ function createGraph (graphEl) { // in standard cartesian coordinates
         // console.log(elementNumber, pathsEndingInElement)
         const elementBox = document.createElement('div')
         elementBox.className = 'shell-element'
-        if (elementNumber == startingIndex) elementBox.style.color = 'white'
+        if (i === 1) elementBox.style.color = 'white'
         // const widthNumber = Math.floor(100 * /maxElementsInAllShells)
         elementBox.style.width = Math.round(100000 / shell.openWorldpaths - 1)/ 1000 + '%'
         elementBox.innerText = elementNumber
-        elementBox.style.height = Math.round(100 * pathsEndingInElement / shell.totalWorldPaths) + '%'
+        const heightPercent = Math.round(100 * pathsEndingInElement / shell.totalWorldPaths)
+        elementBox.style.height = '100%'
+        elementBox.style.background = `linear-gradient(to bottom, rgb(36, 24, 94) ${heightPercent}%, #fff ${1 - heightPercent}%`
         shellElementContainer.appendChild(elementBox)
       }
       
