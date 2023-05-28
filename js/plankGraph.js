@@ -9,20 +9,31 @@ const layout = `
   <input type="text" value="" name="name" hidden></input>
   <a href="#" class="view-interactive">Open as Interactive</a>
   <div class="svg-container"></div>
-  
+  <div class="actions">
+      <button type="submit" class="btn btn-success" >Save Graph</button>
+    </div>
   <div class="sparse-matrix-container">
     <h4>Sparse Matrix Representation</h4>
+    
   </div>
   <div class="metrics-container">
     <h4>Metrics</h4>
+    <div>
+      <h5>Starting Element: <span class="startingIndex"></span></h5>
+    </div>
+    <div>
+      <h5>Shells Computed: <span class="maxDepth"></span></h5>
+    </div>
+    <div>
+      <h5>Calculated Number of Worldpaths: <span class="worldpathCount"></span></h5>
+    </div>
   </div>
-  <div class="dimensionality-container">
-    <h4>Shells of Dimensionality</h4>
+  <div class="effect-container">
+    <h4>Shells of Effect</h4>
+    <div class="shells-container"></div>
   </div>
  
-  <div class="info">
-    <button type="submit" class="btn btn-success" >Save Graph</button>
-  </div>
+  
   <style>
 
     .pg-container .svg-container {
@@ -82,12 +93,13 @@ const layout = `
       overflow-y: hidden;
     }
 
-    .pg-container .dimensionality-container {
+    .pg-container .effect-container {
       display: none;
-      width: 33.3%;
-      float: right;
-      overflow-y: scroll;
-      overflow-y: hidden;
+      // width: 33.3%;
+      // float: right;
+      // overflow-y: scroll;
+      // overflow-y: hidden;
+      padding: 5px;
     }
 
     .pg-container .metrics-container {
@@ -96,6 +108,7 @@ const layout = `
       float: right;
       overflow-y: scroll;
       overflow-y: hidden;
+      text-align: center;
     }
 
     .pg-container input[name="name"] {
@@ -105,6 +118,33 @@ const layout = `
 
     .pg-container button[type="submit"] {
       display: none;
+    }
+
+    .pg-container div.shells-container {
+      height: 300px;
+    }
+
+    .pg-container div.shells-container > div.shell {
+      
+      position: relative;
+    }
+
+    .pg-container div.shells-container .shell-element-container {
+      margin: auto;
+      height: 100%;
+      border: 0.5px solid black;
+      background-color: lightgrey;
+    }
+    .pg-container div.shells-container div.shell-element {
+      display: inline-block;
+      background-color: black;
+      // border: 1px solid black;
+      height: 100%;
+      color: black;
+      font-size:10px;
+      text-align: center;
+      margin-bottom:0px;
+      line-height: 3;
     }
   </style>
   </form>
@@ -171,11 +211,11 @@ function createGraph (graphEl) { // in standard cartesian coordinates
   }
   if (graphEl.getAttribute('readonly') === 'false') { // interactive mode
     graphEl.querySelector('div.sparse-matrix-container').style.display = 'inline-block'
-    graphEl.querySelector('div.dimensionality-container').style.display = 'inline-block'
+    graphEl.querySelector('div.effect-container').style.display = 'block'
     graphEl.querySelector('div.metrics-container').style.display = 'inline-block'
     const complianceVector = Library.validateVectorString(graphEl.dataset.starting)
     applyComplianceVector(svg, complianceVector)
-    createSpareMatrix()  // also creates dimensionality graph and metrics
+    createSpareMatrix()  // also creates effect graph and metrics
     
   }
  
@@ -183,7 +223,7 @@ function createGraph (graphEl) { // in standard cartesian coordinates
 
   function createSpareMatrix() { // monto carlo volume approximation of how volume grows with radius, start with j=0
     console.log('createSpareMatrix')
-    const squareSize = 10
+    const squareSize = 2
     const vectorString = graphEl.querySelector('span.vector-string').textContent
     const matrix = Library.makeSparseMatrix(vectorString)
     const svg = document.createElementNS(NS,'svg')
@@ -195,6 +235,7 @@ function createGraph (graphEl) { // in standard cartesian coordinates
     svg.style.height = height + 'px'
     svg.style.width = width + 'px'
     svg.style.backgroundColor = '#d3d3d333'
+    svg.style.border = '0.5px solid black'
     svg.classList.add('sparse-matrix')
     const svgContainer = graphEl.querySelector('div.sparse-matrix-container')
     svgContainer.appendChild(svg)
@@ -205,7 +246,7 @@ function createGraph (graphEl) { // in standard cartesian coordinates
         addMatrixSquare(j, i, sparseMatrix[j][i])
       }
     }
-    createDimensionalityGraph(matrix)
+    createEffectGraph(matrix)
 
     function addMatrixSquare (j, i, value) {
       const square = document.createElementNS(NS,'rect')
@@ -214,82 +255,57 @@ function createGraph (graphEl) { // in standard cartesian coordinates
       square.setAttribute('width', squareSize)
       square.setAttribute('height', squareSize)
       // square.id = 'sparse-element-' + i + '-' + i
-      square.setAttribute('stroke', 'black')
-      square.setAttribute('stroke-width', '0.5px')
+      // square.setAttribute('stroke', 'black')
+      // square.setAttribute('stroke-width', '0.5px')
       square.setAttribute('fill', value === '1' ? 'black' : 'white')
       // square.classList.add('origin-circle')
       svg.appendChild(square)
     }
   }
 
-  function createDimensionalityGraph (matrix) {
-    const startingIndex = Math.floor(matrix.length / 2)
-    console.log('create dimensionality graph starting at index=', startingIndex)
-    // const connectedElements = Library.findAdjascentElements(matrix, startingIndex)
-    // console.log(startingIndex, 'is connected to', connectedElements)
+  function createEffectGraph (matrix) {
+    const startingIndex = Math.ceil(matrix.length / 2) + 1
+    graphEl.querySelector('span.startingIndex').innerText = startingIndex
+    console.log('create effect graph starting at index=', startingIndex)
     const maxDepth = 10
-    // const maxShellLength = 50
+    graphEl.querySelector('span.maxDepth').innerText = maxDepth
     const relationsObject = Library.createRelationsObjectFromSparseMatrix(matrix) // fastest way
-    /*
-    { 0 : {
-            1 : true,
-            4: true,
-            5: true
-          },
-      1: {
-            0: true,
-            7: true,
-            9:true
-          }
-      ...
-    }
-    */
-   console.log('relationsObject', relationsObject)
-   const worldPaths = [[startingIndex]]
-   
-   appendWorldPath(worldPaths[0])
-
-   console.log('worldPaths', worldPaths)
-   const shells = []
-   for (let i = 0; i <= maxDepth; i++) {
-    shells.push({
-      shellNumber: i,
-      numberOfPaths: 0,
-      endingElements: []
+    console.log('relationsObject', relationsObject)
+    const worldPaths = Library.allWorldpathsFromRelationsObject(relationsObject, startingIndex, maxDepth)
+    console.log('worldPaths', worldPaths)
+    graphEl.querySelector('span.worldpathCount').innerText = worldPaths.length
+    const shells = Library.shellsFromWorldPaths(worldPaths)
+    console.log('shells', shells)
+    const shellsContainerEl = graphEl.querySelector('div.shells-container')
+    let maxElementsInAllShells = 0
+    shells.forEach(shell => {
+      if (shell.openWorldpaths > maxElementsInAllShells) maxElementsInAllShells = shell.openWorldpaths
     })
-   }
-  //  console.log('shellsEmpty', shells)
-   for (const i in worldPaths) {
-    const worldPath = worldPaths[i]
-    // console.log(worldPath)
-    const pathLength = worldPath.length
-    // console.log(pathLength)
-    shells[pathLength].numberOfPaths++
-    const endingElement = worldPath[worldPath.length - 1]
-    // console.log({endingElement})
-    if (!shells[pathLength].endingElements.includes(endingElement)) {
-      shells[pathLength].endingElements.push(endingElement)
-    }
-   }
-   console.log('shells', shells)
-
-
-   function appendWorldPath (pathArray) { // start with the array children
-    if (pathArray.length >= maxDepth  ) return
-    const lastElement = pathArray[pathArray.length - 1]
-    const connectedElements = Object.keys(relationsObject[lastElement]).map(el => 1 * el)
-    // console.log('connectedElements', connectedElements)
-    for (const i in connectedElements) {
-      const newPathArray = pathArray.map(x => 1 * x)
-      const newElement = connectedElements[i]
-      if (!newPathArray.includes(newElement)) { // if we haven't visited that element before, on this path
-        newPathArray.push(newElement)
-        worldPaths.push(newPathArray)
-        appendWorldPath(newPathArray)
+    shells.forEach((shell, i) => {
+      if (i == 0) return
+      const shellEl = document.createElement('div')
+      shellEl.style.height = Math.ceil(100/shells.length) + '%'
+      shellEl.className = 'shell'
+      shellsContainerEl.appendChild(shellEl)
+      const shellElementContainer = document.createElement('div')
+      shellElementContainer.className = 'shell-element-container'
+      shellEl.appendChild(shellElementContainer)
+      const shellElementContainerWidth = Math.round(1000 * shell.openWorldpaths/ maxElementsInAllShells) / 10
+      shellElementContainer.style.width = shellElementContainerWidth + '%'
+      for (const elementNumber in shell.endingPathCounts) {
+        const pathsEndingInElement = shell.endingPathCounts[elementNumber]
+        // console.log(elementNumber, pathsEndingInElement)
+        const elementBox = document.createElement('div')
+        elementBox.className = 'shell-element'
+        if (elementNumber == startingIndex) elementBox.style.color = 'white'
+        // const widthNumber = Math.floor(100 * /maxElementsInAllShells)
+        elementBox.style.width = Math.round(100000 / shell.openWorldpaths - 1)/ 1000 + '%'
+        elementBox.innerText = elementNumber
+        elementBox.style.height = Math.round(100 * pathsEndingInElement / shell.totalWorldPaths) + '%'
+        shellElementContainer.appendChild(elementBox)
       }
       
-    }
-   }
+    })
 
    
   }

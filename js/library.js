@@ -98,6 +98,20 @@ function vectorStringToBase10Array(nums) {
 exports.vectorStringToBase10Array = vectorStringToBase10Array
 
 function createRelationsObjectFromSparseMatrix (matrix) {
+   /*
+    { 0 : {
+            1 : true,
+            4: true,
+            5: true
+          },
+      1: {
+            0: true,
+            7: true,
+            9:true
+          }
+      ...
+    }
+    */
   const relations = {}
   for (let j = 0; j < matrix.length; j++ ) {
     for (let i = 0; i < matrix[j].length; i++) {
@@ -113,20 +127,6 @@ function createRelationsObjectFromSparseMatrix (matrix) {
 }
 
 exports.createRelationsObjectFromSparseMatrix = createRelationsObjectFromSparseMatrix
-
-// function sort_unique(arr) {
-//   if (arr.length === 0) return arr;
-//   arr = arr.sort(function (a, b) { return a*1 - b*1; });
-//   var ret = [arr[0]];
-//   for (var i = 1; i < arr.length; i++) { //Start loop at 1: arr[0] can never be a duplicate
-//     if (arr[i-1] !== arr[i]) {
-//       ret.push(arr[i]);
-//     }
-//   }
-//   return ret;
-// }
-
-// exports.sort_unique = sort_unique
 
 function base10ArrayToBase2Array(b10Array, padding) {
   let maxScale = 0
@@ -145,3 +145,76 @@ function base10ArrayToBase2Array(b10Array, padding) {
 
 
 exports.base10ArrayToBase2Array = base10ArrayToBase2Array
+
+function allWorldpathsFromRelationsObject (relationsObject, startingIndex, maxDepth) {
+  const worldPaths = [[startingIndex]]
+  appendWorldPath(worldPaths[0])
+
+  function appendWorldPath (pathArray) { // start with the array children
+    if (pathArray.length >= maxDepth  ) return
+    const lastElement = pathArray[pathArray.length - 1]
+    const connectedElements = Object.keys(relationsObject[lastElement]).map(el => 1 * el)
+    // console.log('connectedElements', connectedElements)
+    for (const i in connectedElements) {
+      const newPathArray = pathArray.map(x => 1 * x)
+      const newElement = connectedElements[i]
+      if (!newPathArray.includes(newElement)) { // if we haven't visited that element before, on this path
+        newPathArray.push(newElement)
+        worldPaths.push(newPathArray)
+        appendWorldPath(newPathArray)
+      }
+      
+    }
+   }
+  return worldPaths
+}
+
+exports.allWorldpathsFromRelationsObject = allWorldpathsFromRelationsObject
+
+function shellsFromWorldPaths (worldPaths) {
+  const shells = []
+  let maxDepth = 0
+  for (let i = 0; i < worldPaths.length; i++) {
+    if (worldPaths[i].length > maxDepth) maxDepth = worldPaths[i].length
+  }
+  for (let i = 0; i <= maxDepth; i++) {
+   shells.push({
+     shellNumber: i,
+     totalWorldPaths: 0,
+     endingElements: [],
+     endingPathCounts: {},
+     deltaEndingElements: 0,
+     closedWorldPaths: 0,
+     openWorldpaths: 0
+   })
+  }
+ //  console.log('shellsEmpty', shells)
+  for (const i in worldPaths) {
+   const worldPath = worldPaths[i]
+   // console.log(worldPath)
+   const pathLength = worldPath.length
+   // console.log(pathLength)
+   shells[pathLength].totalWorldPaths++
+   const endingElement = worldPath[worldPath.length - 1]
+   // console.log({endingElement})
+   if (!shells[pathLength].endingElements.includes(endingElement)) {
+     shells[pathLength].endingElements.push(endingElement)
+     shells[pathLength].endingPathCounts[endingElement] = 1
+     shells[pathLength].openWorldpaths++
+   } else { // element already in list
+     if (typeof shells[pathLength].endingPathCounts[endingElement] === 'number' ) {
+       shells[pathLength].endingPathCounts[endingElement]++
+     }
+     shells[pathLength].closedWorldPaths++
+   }
+  }
+ //  console.log('shells', shells)
+  for (let i = 0; i < shells.length; i++) {
+   if (i !== 0) {
+     shells[i].deltaEndingElements = shells[i].endingElements.length - shells[i - 1].endingElements.length 
+   }
+  }
+  return shells
+}
+
+exports.shellsFromWorldPaths = shellsFromWorldPaths

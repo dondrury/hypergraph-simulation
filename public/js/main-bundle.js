@@ -100,6 +100,20 @@ function vectorStringToBase10Array(nums) {
 }
 exports.vectorStringToBase10Array = vectorStringToBase10Array;
 function createRelationsObjectFromSparseMatrix(matrix) {
+  /*
+   { 0 : {
+           1 : true,
+           4: true,
+           5: true
+         },
+     1: {
+           0: true,
+           7: true,
+           9:true
+         }
+     ...
+   }
+   */
   var relations = {};
   for (var j = 0; j < matrix.length; j++) {
     for (var i = 0; i < matrix[j].length; i++) {
@@ -114,21 +128,6 @@ function createRelationsObjectFromSparseMatrix(matrix) {
   return relations;
 }
 exports.createRelationsObjectFromSparseMatrix = createRelationsObjectFromSparseMatrix;
-
-// function sort_unique(arr) {
-//   if (arr.length === 0) return arr;
-//   arr = arr.sort(function (a, b) { return a*1 - b*1; });
-//   var ret = [arr[0]];
-//   for (var i = 1; i < arr.length; i++) { //Start loop at 1: arr[0] can never be a duplicate
-//     if (arr[i-1] !== arr[i]) {
-//       ret.push(arr[i]);
-//     }
-//   }
-//   return ret;
-// }
-
-// exports.sort_unique = sort_unique
-
 function base10ArrayToBase2Array(b10Array, padding) {
   var maxScale = 0;
   var b2Array = b10Array.map(function (num) {
@@ -144,6 +143,80 @@ function base10ArrayToBase2Array(b10Array, padding) {
   return b2Array;
 }
 exports.base10ArrayToBase2Array = base10ArrayToBase2Array;
+function allWorldpathsFromRelationsObject(relationsObject, startingIndex, maxDepth) {
+  var worldPaths = [[startingIndex]];
+  appendWorldPath(worldPaths[0]);
+  function appendWorldPath(pathArray) {
+    // start with the array children
+    if (pathArray.length >= maxDepth) return;
+    var lastElement = pathArray[pathArray.length - 1];
+    var connectedElements = Object.keys(relationsObject[lastElement]).map(function (el) {
+      return 1 * el;
+    });
+    // console.log('connectedElements', connectedElements)
+    for (var i in connectedElements) {
+      var newPathArray = pathArray.map(function (x) {
+        return 1 * x;
+      });
+      var newElement = connectedElements[i];
+      if (!newPathArray.includes(newElement)) {
+        // if we haven't visited that element before, on this path
+        newPathArray.push(newElement);
+        worldPaths.push(newPathArray);
+        appendWorldPath(newPathArray);
+      }
+    }
+  }
+  return worldPaths;
+}
+exports.allWorldpathsFromRelationsObject = allWorldpathsFromRelationsObject;
+function shellsFromWorldPaths(worldPaths) {
+  var shells = [];
+  var maxDepth = 0;
+  for (var i = 0; i < worldPaths.length; i++) {
+    if (worldPaths[i].length > maxDepth) maxDepth = worldPaths[i].length;
+  }
+  for (var _i = 0; _i <= maxDepth; _i++) {
+    shells.push({
+      shellNumber: _i,
+      totalWorldPaths: 0,
+      endingElements: [],
+      endingPathCounts: {},
+      deltaEndingElements: 0,
+      closedWorldPaths: 0,
+      openWorldpaths: 0
+    });
+  }
+  //  console.log('shellsEmpty', shells)
+  for (var _i2 in worldPaths) {
+    var worldPath = worldPaths[_i2];
+    // console.log(worldPath)
+    var pathLength = worldPath.length;
+    // console.log(pathLength)
+    shells[pathLength].totalWorldPaths++;
+    var endingElement = worldPath[worldPath.length - 1];
+    // console.log({endingElement})
+    if (!shells[pathLength].endingElements.includes(endingElement)) {
+      shells[pathLength].endingElements.push(endingElement);
+      shells[pathLength].endingPathCounts[endingElement] = 1;
+      shells[pathLength].openWorldpaths++;
+    } else {
+      // element already in list
+      if (typeof shells[pathLength].endingPathCounts[endingElement] === 'number') {
+        shells[pathLength].endingPathCounts[endingElement]++;
+      }
+      shells[pathLength].closedWorldPaths++;
+    }
+  }
+  //  console.log('shells', shells)
+  for (var _i3 = 0; _i3 < shells.length; _i3++) {
+    if (_i3 !== 0) {
+      shells[_i3].deltaEndingElements = shells[_i3].endingElements.length - shells[_i3 - 1].endingElements.length;
+    }
+  }
+  return shells;
+}
+exports.shellsFromWorldPaths = shellsFromWorldPaths;
 
 },{}],2:[function(require,module,exports){
 'use strict';
@@ -161,7 +234,7 @@ var Library = require('./library');
 var excessVectorPadding = 6;
 var NS = 'http://www.w3.org/2000/svg';
 // const padding = 20
-var layout = "\n<div class=\"pg-container\">\n  <form action=\"/graph/save\" method=\"POST\">\n  <h3 class=\"title\">Plank Graph of: <span class=\"vector-string\"></span></h3>\n  <input type=\"text\" value=\"\" name=\"name\" hidden></input>\n  <a href=\"#\" class=\"view-interactive\">Open as Interactive</a>\n  <div class=\"svg-container\"></div>\n  \n  <div class=\"sparse-matrix-container\">\n    <h4>Sparse Matrix Representation</h4>\n  </div>\n  <div class=\"metrics-container\">\n    <h4>Metrics</h4>\n  </div>\n  <div class=\"dimensionality-container\">\n    <h4>Shells of Dimensionality</h4>\n  </div>\n \n  <div class=\"info\">\n    <button type=\"submit\" class=\"btn btn-success\" >Save Graph</button>\n  </div>\n  <style>\n\n    .pg-container .svg-container {\n      max-width: 100%;\n      width: 100%;\n      overflow-y: scroll;\n      overflow-y: hidden;\n    }\n    .pg-container svg.plank circle{\n      fill: white;\n      stroke: black;\n      stroke-width: 1px;\n    }\n\n    .pg-container h3 {\n      display: inline;\n    }\n\n    .pg-container a.view-interactive {\n      margin-left: 20px;\n    }\n\n    .pg-container svg.plank circle.matrix-element:hover {\n      stroke: red;\n      cursor: pointer;\n    }\n\n    .pg-container svg circle.origin-circle:hover {\n      cursor: pointer;\n    }\n\n    .pg-container svg text.origin-circle:hover {\n      cursor: pointer;\n    }\n\n    .pg-container svg circle.origin-circle.non-compliant {\n      fill: #ff7575;\n    }\n\n    .pg-container svg circle.origin-circle.compliant {\n      fill: #5abf5a;\n    }\n\n    .pg-container svg circle.origin-circle.blink {\n      fill: #741bbd;\n    }\n\n\n    .pg-container svg.plank circle.filled{\n      fill: black;\n    }\n\n    .pg-container .sparse-matrix-container {\n      display: none;\n      width: 33.3%;\n      overflow-y: scroll;\n      overflow-y: hidden;\n    }\n\n    .pg-container .dimensionality-container {\n      display: none;\n      width: 33.3%;\n      float: right;\n      overflow-y: scroll;\n      overflow-y: hidden;\n    }\n\n    .pg-container .metrics-container {\n      display: none;\n      width: 33.3%;\n      float: right;\n      overflow-y: scroll;\n      overflow-y: hidden;\n    }\n\n    .pg-container input[name=\"name\"] {\n      width: 84rem;\n      border: none;\n    }\n\n    .pg-container button[type=\"submit\"] {\n      display: none;\n    }\n  </style>\n  </form>\n</div>\n";
+var layout = "\n<div class=\"pg-container\">\n  <form action=\"/graph/save\" method=\"POST\">\n  <h3 class=\"title\">Plank Graph of: <span class=\"vector-string\"></span></h3>\n  <input type=\"text\" value=\"\" name=\"name\" hidden></input>\n  <a href=\"#\" class=\"view-interactive\">Open as Interactive</a>\n  <div class=\"svg-container\"></div>\n  <div class=\"actions\">\n      <button type=\"submit\" class=\"btn btn-success\" >Save Graph</button>\n    </div>\n  <div class=\"sparse-matrix-container\">\n    <h4>Sparse Matrix Representation</h4>\n    \n  </div>\n  <div class=\"metrics-container\">\n    <h4>Metrics</h4>\n    <div>\n      <h5>Starting Element: <span class=\"startingIndex\"></span></h5>\n    </div>\n    <div>\n      <h5>Shells Computed: <span class=\"maxDepth\"></span></h5>\n    </div>\n    <div>\n      <h5>Calculated Number of Worldpaths: <span class=\"worldpathCount\"></span></h5>\n    </div>\n  </div>\n  <div class=\"effect-container\">\n    <h4>Shells of Effect</h4>\n    <div class=\"shells-container\"></div>\n  </div>\n \n  \n  <style>\n\n    .pg-container .svg-container {\n      max-width: 100%;\n      width: 100%;\n      overflow-y: scroll;\n      overflow-y: hidden;\n    }\n    .pg-container svg.plank circle{\n      fill: white;\n      stroke: black;\n      stroke-width: 1px;\n    }\n\n    .pg-container h3 {\n      display: inline;\n    }\n\n    .pg-container a.view-interactive {\n      margin-left: 20px;\n    }\n\n    .pg-container svg.plank circle.matrix-element:hover {\n      stroke: red;\n      cursor: pointer;\n    }\n\n    .pg-container svg circle.origin-circle:hover {\n      cursor: pointer;\n    }\n\n    .pg-container svg text.origin-circle:hover {\n      cursor: pointer;\n    }\n\n    .pg-container svg circle.origin-circle.non-compliant {\n      fill: #ff7575;\n    }\n\n    .pg-container svg circle.origin-circle.compliant {\n      fill: #5abf5a;\n    }\n\n    .pg-container svg circle.origin-circle.blink {\n      fill: #741bbd;\n    }\n\n\n    .pg-container svg.plank circle.filled{\n      fill: black;\n    }\n\n    .pg-container .sparse-matrix-container {\n      display: none;\n      width: 33.3%;\n      overflow-y: scroll;\n      overflow-y: hidden;\n    }\n\n    .pg-container .effect-container {\n      display: none;\n      // width: 33.3%;\n      // float: right;\n      // overflow-y: scroll;\n      // overflow-y: hidden;\n      padding: 5px;\n    }\n\n    .pg-container .metrics-container {\n      display: none;\n      width: 33.3%;\n      float: right;\n      overflow-y: scroll;\n      overflow-y: hidden;\n      text-align: center;\n    }\n\n    .pg-container input[name=\"name\"] {\n      width: 84rem;\n      border: none;\n    }\n\n    .pg-container button[type=\"submit\"] {\n      display: none;\n    }\n\n    .pg-container div.shells-container {\n      height: 300px;\n    }\n\n    .pg-container div.shells-container > div.shell {\n      \n      position: relative;\n    }\n\n    .pg-container div.shells-container .shell-element-container {\n      margin: auto;\n      height: 100%;\n      border: 0.5px solid black;\n      background-color: lightgrey;\n    }\n    .pg-container div.shells-container div.shell-element {\n      display: inline-block;\n      background-color: black;\n      // border: 1px solid black;\n      height: 100%;\n      color: black;\n      font-size:10px;\n      text-align: center;\n      margin-bottom:0px;\n      line-height: 3;\n    }\n  </style>\n  </form>\n</div>\n";
 function init() {
   console.log('init');
   if (document.getElementsByClassName('plank-graph').length > 0) {
@@ -230,11 +303,11 @@ function createGraph(graphEl) {
   if (graphEl.getAttribute('readonly') === 'false') {
     // interactive mode
     graphEl.querySelector('div.sparse-matrix-container').style.display = 'inline-block';
-    graphEl.querySelector('div.dimensionality-container').style.display = 'inline-block';
+    graphEl.querySelector('div.effect-container').style.display = 'block';
     graphEl.querySelector('div.metrics-container').style.display = 'inline-block';
     var complianceVector = Library.validateVectorString(graphEl.dataset.starting);
     applyComplianceVector(svg, complianceVector);
-    createSpareMatrix(); // also creates dimensionality graph and metrics
+    createSpareMatrix(); // also creates effect graph and metrics
   }
 
   // end main createGraph body
@@ -242,7 +315,7 @@ function createGraph(graphEl) {
   function createSpareMatrix() {
     // monto carlo volume approximation of how volume grows with radius, start with j=0
     console.log('createSpareMatrix');
-    var squareSize = 10;
+    var squareSize = 2;
     var vectorString = graphEl.querySelector('span.vector-string').textContent;
     var matrix = Library.makeSparseMatrix(vectorString);
     var svg = document.createElementNS(NS, 'svg');
@@ -258,6 +331,7 @@ function createGraph(graphEl) {
     svg.style.height = height + 'px';
     svg.style.width = width + 'px';
     svg.style.backgroundColor = '#d3d3d333';
+    svg.style.border = '0.5px solid black';
     svg.classList.add('sparse-matrix');
     var svgContainer = graphEl.querySelector('div.sparse-matrix-container');
     svgContainer.appendChild(svg);
@@ -270,7 +344,7 @@ function createGraph(graphEl) {
         addMatrixSquare(j, _i3, sparseMatrix[j][_i3]);
       }
     }
-    createDimensionalityGraph(matrix);
+    createEffectGraph(matrix);
     function addMatrixSquare(j, i, value) {
       var square = document.createElementNS(NS, 'rect');
       square.setAttribute('y', yOffset(j));
@@ -278,82 +352,55 @@ function createGraph(graphEl) {
       square.setAttribute('width', squareSize);
       square.setAttribute('height', squareSize);
       // square.id = 'sparse-element-' + i + '-' + i
-      square.setAttribute('stroke', 'black');
-      square.setAttribute('stroke-width', '0.5px');
+      // square.setAttribute('stroke', 'black')
+      // square.setAttribute('stroke-width', '0.5px')
       square.setAttribute('fill', value === '1' ? 'black' : 'white');
       // square.classList.add('origin-circle')
       svg.appendChild(square);
     }
   }
-  function createDimensionalityGraph(matrix) {
-    var startingIndex = Math.floor(matrix.length / 2);
-    console.log('create dimensionality graph starting at index=', startingIndex);
-    // const connectedElements = Library.findAdjascentElements(matrix, startingIndex)
-    // console.log(startingIndex, 'is connected to', connectedElements)
+  function createEffectGraph(matrix) {
+    var startingIndex = Math.ceil(matrix.length / 2) + 1;
+    graphEl.querySelector('span.startingIndex').innerText = startingIndex;
+    console.log('create effect graph starting at index=', startingIndex);
     var maxDepth = 10;
-    // const maxShellLength = 50
+    graphEl.querySelector('span.maxDepth').innerText = maxDepth;
     var relationsObject = Library.createRelationsObjectFromSparseMatrix(matrix); // fastest way
-    /*
-    { 0 : {
-            1 : true,
-            4: true,
-            5: true
-          },
-      1: {
-            0: true,
-            7: true,
-            9:true
-          }
-      ...
-    }
-    */
     console.log('relationsObject', relationsObject);
-    var worldPaths = [[startingIndex]];
-    appendWorldPath(worldPaths[0]);
+    var worldPaths = Library.allWorldpathsFromRelationsObject(relationsObject, startingIndex, maxDepth);
     console.log('worldPaths', worldPaths);
-    var shells = [];
-    for (var _i4 = 0; _i4 <= maxDepth; _i4++) {
-      shells.push({
-        shellNumber: _i4,
-        numberOfPaths: 0,
-        endingElements: []
-      });
-    }
-    //  console.log('shellsEmpty', shells)
-    for (var _i5 in worldPaths) {
-      var worldPath = worldPaths[_i5];
-      // console.log(worldPath)
-      var pathLength = worldPath.length;
-      // console.log(pathLength)
-      shells[pathLength].numberOfPaths++;
-      var endingElement = worldPath[worldPath.length - 1];
-      // console.log({endingElement})
-      if (!shells[pathLength].endingElements.includes(endingElement)) {
-        shells[pathLength].endingElements.push(endingElement);
-      }
-    }
+    graphEl.querySelector('span.worldpathCount').innerText = worldPaths.length;
+    var shells = Library.shellsFromWorldPaths(worldPaths);
     console.log('shells', shells);
-    function appendWorldPath(pathArray) {
-      // start with the array children
-      if (pathArray.length >= maxDepth) return;
-      var lastElement = pathArray[pathArray.length - 1];
-      var connectedElements = Object.keys(relationsObject[lastElement]).map(function (el) {
-        return 1 * el;
-      });
-      // console.log('connectedElements', connectedElements)
-      for (var _i6 in connectedElements) {
-        var newPathArray = pathArray.map(function (x) {
-          return 1 * x;
-        });
-        var newElement = connectedElements[_i6];
-        if (!newPathArray.includes(newElement)) {
-          // if we haven't visited that element before, on this path
-          newPathArray.push(newElement);
-          worldPaths.push(newPathArray);
-          appendWorldPath(newPathArray);
-        }
+    var shellsContainerEl = graphEl.querySelector('div.shells-container');
+    var maxElementsInAllShells = 0;
+    shells.forEach(function (shell) {
+      if (shell.openWorldpaths > maxElementsInAllShells) maxElementsInAllShells = shell.openWorldpaths;
+    });
+    shells.forEach(function (shell, i) {
+      if (i == 0) return;
+      var shellEl = document.createElement('div');
+      shellEl.style.height = Math.ceil(100 / shells.length) + '%';
+      shellEl.className = 'shell';
+      shellsContainerEl.appendChild(shellEl);
+      var shellElementContainer = document.createElement('div');
+      shellElementContainer.className = 'shell-element-container';
+      shellEl.appendChild(shellElementContainer);
+      var shellElementContainerWidth = Math.round(1000 * shell.openWorldpaths / maxElementsInAllShells) / 10;
+      shellElementContainer.style.width = shellElementContainerWidth + '%';
+      for (var elementNumber in shell.endingPathCounts) {
+        var pathsEndingInElement = shell.endingPathCounts[elementNumber];
+        // console.log(elementNumber, pathsEndingInElement)
+        var elementBox = document.createElement('div');
+        elementBox.className = 'shell-element';
+        if (elementNumber == startingIndex) elementBox.style.color = 'white';
+        // const widthNumber = Math.floor(100 * /maxElementsInAllShells)
+        elementBox.style.width = Math.round(100000 / shell.openWorldpaths - 1) / 1000 + '%';
+        elementBox.innerText = elementNumber;
+        elementBox.style.height = Math.round(100 * pathsEndingInElement / shell.totalWorldPaths) + '%';
+        shellElementContainer.appendChild(elementBox);
       }
-    }
+    });
   }
   function addVectorCircles(svg, i) {
     // in offset coordinates, i is vector number
