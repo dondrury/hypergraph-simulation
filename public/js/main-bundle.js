@@ -159,8 +159,8 @@ function allWorldpathsFromRelationsObject(relationsObject, startingIndex, maxDep
         return 1 * x;
       });
       var newElement = connectedElements[i];
-      if (!newPathArray.includes(newElement)) {
-        // if we haven't visited that element before, on this path
+      if (newElement !== 0) {
+        // don't cross zero, and become and accidentally closed space
         newPathArray.push(newElement);
         worldPaths.push(newPathArray);
         appendWorldPath(newPathArray);
@@ -184,10 +184,12 @@ function shellsFromWorldPaths(worldPaths) {
       endingPathCounts: {},
       deltaEndingElements: 0,
       closedWorldPaths: 0,
-      openWorldpaths: 0
+      openWorldpaths: 0,
+      newElementsVisited: []
     });
   }
   //  console.log('shellsEmpty', shells)
+  var elementsVisited = [];
   for (var _i2 in worldPaths) {
     var worldPath = worldPaths[_i2];
     // console.log(worldPath)
@@ -196,6 +198,11 @@ function shellsFromWorldPaths(worldPaths) {
     shells[pathLength].totalWorldPaths++;
     var endingElement = worldPath[worldPath.length - 1];
     // console.log({endingElement})
+    if (!elementsVisited.includes(endingElement)) {
+      // no path has yet to visit this element
+      shells[pathLength].newElementsVisited.push(endingElement);
+      elementsVisited.push(endingElement);
+    }
     if (!shells[pathLength].endingElements.includes(endingElement)) {
       shells[pathLength].endingElements.push(endingElement);
       shells[pathLength].endingPathCounts[endingElement] = 1;
@@ -234,7 +241,7 @@ var Library = require('./library');
 var excessVectorPadding = 6;
 var NS = 'http://www.w3.org/2000/svg';
 // const padding = 20
-var layout = "\n<div class=\"pg-container\">\n  <form action=\"/graph/save\" method=\"POST\">\n  <h3 class=\"title\">Plank Graph of: <span class=\"vector-string\"></span></h3>\n  <input type=\"text\" value=\"\" name=\"name\" hidden></input>\n  <a href=\"#\" class=\"view-interactive\">Open as Interactive</a>\n  <div class=\"svg-container\"></div>\n  <div class=\"actions\">\n      <button type=\"submit\" class=\"btn btn-success\" >Save Graph</button>\n    </div>\n  <div class=\"sparse-matrix-container\">\n    <h4>Sparse Matrix Representation</h4>\n    \n  </div>\n  <div class=\"metrics-container\">\n    <h4>Metrics</h4>\n    <div>\n      <h5>Starting Element: <span class=\"startingIndex\"></span></h5>\n    </div>\n    <div>\n      <h5>Shells Computed: <span class=\"maxDepth\"></span></h5>\n    </div>\n    <div>\n      <h5>Calculated Number of Worldpaths: <span class=\"worldpathCount\"></span></h5>\n    </div>\n  </div>\n  <div class=\"effect-container\">\n    <h4>Shells of Effect</h4>\n    <div class=\"shells-container\"></div>\n  </div>\n \n  \n  <style>\n\n    .pg-container .svg-container {\n      max-width: 100%;\n      width: 100%;\n      overflow-y: scroll;\n      overflow-y: hidden;\n    }\n    .pg-container svg.plank circle{\n      fill: white;\n      stroke: black;\n      stroke-width: 1px;\n    }\n\n    .pg-container span.vector-string {\n      word-wrap: break-word;\n    }\n\n    .pg-container h3 {\n      display: inline;\n    }\n\n    .pg-container a.view-interactive {\n      margin-left: 20px;\n    }\n\n    .pg-container svg.plank circle.matrix-element:hover {\n      stroke: red;\n      cursor: pointer;\n    }\n\n    .pg-container svg circle.origin-circle:hover {\n      cursor: pointer;\n    }\n\n    .pg-container svg text.origin-circle:hover {\n      cursor: pointer;\n    }\n\n    .pg-container svg circle.origin-circle.non-compliant {\n      fill: #ff7575;\n    }\n\n    .pg-container svg circle.origin-circle.compliant {\n      fill: #5abf5a;\n    }\n\n    .pg-container svg circle.origin-circle.blink {\n      fill: #741bbd;\n    }\n\n\n    .pg-container svg.plank circle.filled{\n      fill: black;\n    }\n\n    .pg-container .sparse-matrix-container {\n      display: none;\n      width: 33.3%;\n      overflow-y: scroll;\n      overflow-y: hidden;\n    }\n\n    .pg-container .effect-container {\n      display: none;\n      padding: 5px;\n    }\n\n    .pg-container .metrics-container {\n      display: none;\n      width: 33.3%;\n      float: right;\n      overflow-y: scroll;\n      overflow-y: hidden;\n      text-align: center;\n    }\n\n    .pg-container input[name=\"name\"] {\n      width: 84rem;\n      border: none;\n    }\n\n    .pg-container button[type=\"submit\"] {\n      display: none;\n    }\n\n    .pg-container div.shells-container {\n      // height: 300px;\n    }\n\n    .pg-container div.shells-container > div.shell {\n      \n      position: relative;\n    }\n\n    .pg-container div.shells-container .shell-element-container {\n      margin: auto;\n      height: 100%;\n      border: 0.5px solid black;\n      background-color: lightgrey;\n    }\n    .pg-container div.shells-container div.shell-element {\n      display: inline-block;\n      height: 100%;\n      color: black;\n      text-align: center;\n      margin-bottom:0px;\n      padding-top: 7px;\n      font-size: 12px;\n    }\n  </style>\n  </form>\n</div>\n";
+var layout = "\n<div class=\"pg-container\">\n  <form action=\"/graph/save\" method=\"POST\">\n  <h3 class=\"title\">Plank Graph of: <span class=\"vector-string\"></span></h3>\n  <input type=\"text\" value=\"\" name=\"name\" hidden></input>\n  <a href=\"#\" class=\"view-interactive\">Open as Interactive</a>\n  <div class=\"svg-container\"></div>\n  <div class=\"actions\">\n    <button type=\"button\" class=\"btn btn-primary\" >Calculate Properties</button>\n    <button type=\"submit\" class=\"btn btn-success\" >Save Graph</button>\n  </div>\n  <div class=\"sparse-matrix-container\">\n    <h4>Sparse Matrix Representation</h4>\n    \n  </div>\n  <div class=\"metrics-container\">\n    <h4>Metrics</h4>\n    <div>\n      <h5>Starting Element: <span class=\"startingIndex\"></span></h5>\n    </div>\n    <div>\n      <h5>Shells Computed: <span class=\"maxDepth\"></span></h5>\n    </div>\n    <div>\n      <h5>Calculated Number of Worldpaths: <span class=\"worldpathCount\"></span></h5>\n    </div>\n  </div>\n  <div class=\"effect-container\">\n    <h4>Shells of Effect</h4>\n    <div class=\"shells-container\"></div>\n  </div>\n \n  \n  <style>\n\n    .pg-container .svg-container {\n      max-width: 100%;\n      width: 100%;\n      overflow-y: scroll;\n      overflow-y: hidden;\n    }\n    .pg-container svg.plank circle{\n      fill: white;\n      stroke: black;\n      stroke-width: 1px;\n    }\n\n    .pg-container .actions button {\n      display: none;\n    }\n\n    .pg-container span.vector-string {\n      word-wrap: break-word;\n    }\n\n    .pg-container h3 {\n      display: inline;\n    }\n\n    .pg-container a.view-interactive {\n      margin-left: 20px;\n    }\n\n    .pg-container svg.plank circle.matrix-element:hover {\n      stroke: red;\n      cursor: pointer;\n    }\n\n    .pg-container svg circle.origin-circle:hover {\n      cursor: pointer;\n    }\n\n    .pg-container svg text.origin-circle:hover {\n      cursor: pointer;\n    }\n\n    .pg-container svg circle.origin-circle.non-compliant {\n      fill: #ff7575;\n    }\n\n    .pg-container svg circle.origin-circle.compliant {\n      fill: #5abf5a;\n    }\n\n    .pg-container svg circle.origin-circle.blink {\n      fill: #741bbd;\n    }\n\n\n    .pg-container svg.plank circle.filled{\n      fill: black;\n    }\n\n    .pg-container .sparse-matrix-container {\n      display: none;\n      width: 33.3%;\n      overflow-y: scroll;\n      overflow-y: hidden;\n    }\n\n    .pg-container .effect-container {\n      display: none;\n      padding: 5px;\n    }\n\n    .pg-container .metrics-container {\n      display: none;\n      width: 33.3%;\n      float: right;\n      overflow-y: scroll;\n      overflow-y: hidden;\n      text-align: center;\n    }\n\n    .pg-container input[name=\"name\"] {\n      width: 84rem;\n      border: none;\n    }\n\n    .pg-container button[type=\"submit\"] {\n      display: none;\n    }\n\n    .pg-container div.shells-container {\n      // height: 300px;\n    }\n\n    .pg-container div.shells-container > div.shell {\n      \n      position: relative;\n    }\n\n    .pg-container div.shells-container .shell-element-container {\n      margin: auto;\n      height: 100%;\n      border: 0.5px solid black;\n      background-color: lightgrey;\n    }\n    .pg-container div.shells-container div.shell-element {\n      display: inline-block;\n      height: 100%;\n      color: black;\n      text-align: center;\n      margin-bottom:0px;\n      padding-top: 7px;\n      font-size: 12px;\n    }\n  </style>\n  </form>\n</div>\n";
 function init() {
   console.log('init');
   if (document.getElementsByClassName('plank-graph').length > 0) {
@@ -254,12 +261,8 @@ function createGraph(graphEl) {
   inputNameEl.value = graphEl.dataset.starting;
   graphEl.querySelector('span.vector-string').textContent = graphEl.dataset.starting;
   // set up all features for saving
-  if (graphEl.getAttribute('readonly') === 'false') {
-    console.log('graph is interactive');
-    graphEl.querySelector('button[type="submit"]').style.display = 'block';
-    graphEl.querySelector('a.view-interactive').style.display = 'none';
-  }
-  // const href = graphEl.querySelector('a').setAttribute('href', '/graph/byId?name=' + encodeURIComponent(b10Array.join(',')))
+
+  var href = graphEl.querySelector('a').setAttribute('href', '/graph/byId?name=' + encodeURIComponent(b10Array.join(',')));
   var b2Array = Library.base10ArrayToBase2Array(b10Array, excessVectorPadding);
   var scale = b2Array[0].length;
   // console.log('scale', scale)
@@ -302,12 +305,25 @@ function createGraph(graphEl) {
 
   if (graphEl.getAttribute('readonly') === 'false') {
     // interactive mode
+    console.log('graph is interactive');
+    graphEl.querySelector('button[type="submit"]').style.display = 'inline-block';
+    graphEl.querySelector('.actions button.btn-primary').style.display = 'inline-block';
+    graphEl.querySelector('a.view-interactive').style.display = 'none';
     graphEl.querySelector('div.sparse-matrix-container').style.display = 'inline-block';
     graphEl.querySelector('div.effect-container').style.display = 'block';
     graphEl.querySelector('div.metrics-container').style.display = 'inline-block';
     var complianceVector = Library.validateVectorString(graphEl.dataset.starting);
     applyComplianceVector(svg, complianceVector);
-    createSpareMatrix(); // also creates effect graph and metrics
+    // createSpareMatrix()  // also creates effect graph and metrics
+    var calculateButton = graphEl.querySelector('.actions button.btn-primary');
+    calculateButton.onclick = function (event) {
+      event.stopPropagation();
+      var results = Library.validateVectorString(graphEl.querySelector('span.vector-string').textContent);
+      if (results.includes(false)) {// produce an error or something
+      } else {
+        createSpareMatrix(); // all the things
+      }
+    };
   }
 
   // end main createGraph body
@@ -359,17 +375,19 @@ function createGraph(graphEl) {
       svg.appendChild(square);
     }
   }
+  /* Look not at the element, but the relationships. Foloow the relationships, nameley the 2,6,2,6,2,6 graph structure, as we move the defect through another graph!!
+  */
   function createEffectGraph(matrix) {
-    var startingIndex = Math.ceil(matrix.length / 2) + 1;
+    var startingIndex = Math.floor(matrix.length / 2) + 1;
     graphEl.querySelector('span.startingIndex').innerText = startingIndex;
     console.log('create effect graph starting at index=', startingIndex);
-    var maxDepth = 13;
+    var maxDepth = 12;
     graphEl.querySelector('span.maxDepth').innerText = maxDepth;
     var relationsObject = Library.createRelationsObjectFromSparseMatrix(matrix); // fastest way
     console.log('relationsObject', relationsObject);
     var worldPaths = Library.allWorldpathsFromRelationsObject(relationsObject, startingIndex, maxDepth);
     console.log('worldPaths', worldPaths);
-    graphEl.querySelector('span.worldpathCount').innerText = worldPaths.length;
+    graphEl.querySelector('span.worldpathCount').innerText = worldPaths.length.toLocaleString();
     var shells = Library.shellsFromWorldPaths(worldPaths);
     console.log('shells', shells);
     var shellsContainerEl = graphEl.querySelector('div.shells-container');

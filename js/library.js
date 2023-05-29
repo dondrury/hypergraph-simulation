@@ -158,7 +158,7 @@ function allWorldpathsFromRelationsObject (relationsObject, startingIndex, maxDe
     for (const i in connectedElements) {
       const newPathArray = pathArray.map(x => 1 * x)
       const newElement = connectedElements[i]
-      if (!newPathArray.includes(newElement)) { // if we haven't visited that element before, on this path
+      if (newElement !== 0 ) { // don't cross zero, and become and accidentally closed space
         newPathArray.push(newElement)
         worldPaths.push(newPathArray)
         appendWorldPath(newPathArray)
@@ -185,10 +185,12 @@ function shellsFromWorldPaths (worldPaths) {
      endingPathCounts: {},
      deltaEndingElements: 0,
      closedWorldPaths: 0,
-     openWorldpaths: 0
+     openWorldpaths: 0,
+     newElementsVisited: []
    })
   }
  //  console.log('shellsEmpty', shells)
+  const elementsVisited = []
   for (const i in worldPaths) {
    const worldPath = worldPaths[i]
    // console.log(worldPath)
@@ -197,10 +199,15 @@ function shellsFromWorldPaths (worldPaths) {
    shells[pathLength].totalWorldPaths++
    const endingElement = worldPath[worldPath.length - 1]
    // console.log({endingElement})
+   if (!elementsVisited.includes(endingElement)) { // no path has yet to visit this element
+    shells[pathLength].newElementsVisited.push(endingElement)
+    elementsVisited.push(endingElement)
+   }
    if (!shells[pathLength].endingElements.includes(endingElement)) {
      shells[pathLength].endingElements.push(endingElement)
      shells[pathLength].endingPathCounts[endingElement] = 1
      shells[pathLength].openWorldpaths++
+    
    } else { // element already in list
      if (typeof shells[pathLength].endingPathCounts[endingElement] === 'number' ) {
        shells[pathLength].endingPathCounts[endingElement]++

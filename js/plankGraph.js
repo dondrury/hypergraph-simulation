@@ -10,8 +10,9 @@ const layout = `
   <a href="#" class="view-interactive">Open as Interactive</a>
   <div class="svg-container"></div>
   <div class="actions">
-      <button type="submit" class="btn btn-success" >Save Graph</button>
-    </div>
+    <button type="button" class="btn btn-primary" >Calculate Properties</button>
+    <button type="submit" class="btn btn-success" >Save Graph</button>
+  </div>
   <div class="sparse-matrix-container">
     <h4>Sparse Matrix Representation</h4>
     
@@ -46,6 +47,10 @@ const layout = `
       fill: white;
       stroke: black;
       stroke-width: 1px;
+    }
+
+    .pg-container .actions button {
+      display: none;
     }
 
     .pg-container span.vector-string {
@@ -168,12 +173,8 @@ function createGraph (graphEl) { // in standard cartesian coordinates
   inputNameEl.value = graphEl.dataset.starting
   graphEl.querySelector('span.vector-string').textContent = graphEl.dataset.starting
   // set up all features for saving
-  if (graphEl.getAttribute('readonly') === 'false') {
-    console.log('graph is interactive')
-    graphEl.querySelector('button[type="submit"]').style.display = 'block'
-    graphEl.querySelector('a.view-interactive').style.display = 'none'
-  }
-  // const href = graphEl.querySelector('a').setAttribute('href', '/graph/byId?name=' + encodeURIComponent(b10Array.join(',')))
+
+  const href = graphEl.querySelector('a').setAttribute('href', '/graph/byId?name=' + encodeURIComponent(b10Array.join(',')))
   const b2Array = Library.base10ArrayToBase2Array(b10Array, excessVectorPadding)
   const scale = b2Array[0].length
   // console.log('scale', scale)
@@ -208,12 +209,27 @@ function createGraph (graphEl) { // in standard cartesian coordinates
     addVectorCircles(svg, i) // important dots
   }
   if (graphEl.getAttribute('readonly') === 'false') { // interactive mode
+    console.log('graph is interactive')
+    graphEl.querySelector('button[type="submit"]').style.display = 'inline-block'
+    graphEl.querySelector('.actions button.btn-primary').style.display = 'inline-block'
+    graphEl.querySelector('a.view-interactive').style.display = 'none'
     graphEl.querySelector('div.sparse-matrix-container').style.display = 'inline-block'
     graphEl.querySelector('div.effect-container').style.display = 'block'
     graphEl.querySelector('div.metrics-container').style.display = 'inline-block'
     const complianceVector = Library.validateVectorString(graphEl.dataset.starting)
     applyComplianceVector(svg, complianceVector)
-    createSpareMatrix()  // also creates effect graph and metrics
+    // createSpareMatrix()  // also creates effect graph and metrics
+    const calculateButton = graphEl.querySelector('.actions button.btn-primary')
+    calculateButton.onclick = function (event) {
+      event.stopPropagation()
+      const results = Library.validateVectorString(graphEl.querySelector('span.vector-string').textContent)
+      if (results.includes(false)) { // produce an error or something
+
+      } else {
+        createSpareMatrix() // all the things
+      }
+     
+    }
     
   }
  
@@ -260,18 +276,19 @@ function createGraph (graphEl) { // in standard cartesian coordinates
       svg.appendChild(square)
     }
   }
-
+  /* Look not at the element, but the relationships. Foloow the relationships, nameley the 2,6,2,6,2,6 graph structure, as we move the defect through another graph!!
+  */
   function createEffectGraph (matrix) {
-    const startingIndex = Math.ceil(matrix.length / 2) + 1
+    const startingIndex = Math.floor(matrix.length / 2) + 1
     graphEl.querySelector('span.startingIndex').innerText = startingIndex
     console.log('create effect graph starting at index=', startingIndex)
-    const maxDepth = 13
+    const maxDepth = 12
     graphEl.querySelector('span.maxDepth').innerText = maxDepth
     const relationsObject = Library.createRelationsObjectFromSparseMatrix(matrix) // fastest way
     console.log('relationsObject', relationsObject)
     const worldPaths = Library.allWorldpathsFromRelationsObject(relationsObject, startingIndex, maxDepth)
     console.log('worldPaths', worldPaths)
-    graphEl.querySelector('span.worldpathCount').innerText = worldPaths.length
+    graphEl.querySelector('span.worldpathCount').innerText = worldPaths.length.toLocaleString()
     const shells = Library.shellsFromWorldPaths(worldPaths)
     console.log('shells', shells)
     const shellsContainerEl = graphEl.querySelector('div.shells-container')
