@@ -11,7 +11,7 @@ const layout = `
   <div class="svg-container"></div>
   <div class="actions">
     <button type="button" class="btn btn-primary" >Calculate Properties</button>
-    <button type="submit" class="btn btn-success" >Save Graph</button>
+    <button type="submit" class="btn btn-success" disabled >Save Graph</button>
   </div>
   <div class="sparse-matrix-container">
     <h4>Sparse Matrix Representation</h4>
@@ -92,7 +92,15 @@ const layout = `
 
 
     .pg-container svg.plank circle.filled{
-      fill: black;
+      fill: #7b7b7b;
+    }
+
+    .pg-container svg.plank circle.hightlighted{
+      fill: #ff8300;
+    }
+
+    .pg-container svg.plank circle.hightlighted.filled{
+      fill: #ce6c04;
     }
 
     .pg-container .sparse-matrix-container {
@@ -210,8 +218,9 @@ function createGraph (graphEl) { // in standard cartesian coordinates
   }
   if (graphEl.getAttribute('readonly') === 'false') { // interactive mode
     console.log('graph is interactive')
-    graphEl.querySelector('button[type="submit"]').style.display = 'inline-block'
+    
     graphEl.querySelector('.actions button.btn-primary').style.display = 'inline-block'
+    graphEl.querySelector('button[type="submit"]').style.display = 'inline-block'
     graphEl.querySelector('a.view-interactive').style.display = 'none'
     graphEl.querySelector('div.sparse-matrix-container').style.display = 'inline-block'
     graphEl.querySelector('div.effect-container').style.display = 'block'
@@ -400,7 +409,10 @@ function createGraph (graphEl) { // in standard cartesian coordinates
       graphEl.querySelector('span.vector-string').textContent = vectorString
       const complianceVector = Library.validateVectorString(vectorString)
       applyComplianceVector(svg, complianceVector)
-    })  
+    })
+    circle.addEventListener('dblclick', function (event) {
+      this.classList.toggle('hightlighted')
+    })
   }
 
   function applyComplianceVector (svg, complianceVector) {
@@ -420,8 +432,12 @@ function createGraph (graphEl) { // in standard cartesian coordinates
         originCircle.classList.add('non-compliant')
       }
     })
-
-  }
+    if (complianceVector.includes(false)) {
+      graphEl.querySelector('button[type="submit"]').setAttribute('disabled', true)
+    } else {
+      graphEl.querySelector('button[type="submit"]').removeAttribute('disabled')
+    }
+ }
 
   function addOriginCircle (svg, x, y, i) { // in offset coordinates
     const circle = document.createElementNS(NS,'circle')
