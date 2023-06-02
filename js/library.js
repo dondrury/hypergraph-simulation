@@ -158,7 +158,8 @@ function allWorldpathsFromRelationsObject (relationsObject, startingIndex, maxDe
     for (const i in connectedElements) {
       const newPathArray = pathArray.map(x => 1 * x)
       const newElement = connectedElements[i]
-      if (newElement !== 0 ) { // don't cross zero, and become and accidentally closed space
+      if (!pathArray.includes(newElement) && newElement !== 0) {
+      // if (newElement !== 0 ) { // don't cross zero, and become and accidentally closed space
         newPathArray.push(newElement)
         worldPaths.push(newPathArray)
         appendWorldPath(newPathArray)
@@ -170,6 +171,43 @@ function allWorldpathsFromRelationsObject (relationsObject, startingIndex, maxDe
 }
 
 exports.allWorldpathsFromRelationsObject = allWorldpathsFromRelationsObject
+
+function shellsOfDimensionalityFromRelationsObject (relationsObject, startingArray) {
+  const shells = [startingArray.map(el => 1 * el)] // shallow copy
+  const uniqueElementsVisited = startingArray
+  findElementsInNextShell()
+  
+  function findElementsInNextShell () {
+    const shell = shells[shells.length - 1]
+    const nextShell = new Array()
+    for (const i in shell) {
+      const startingElement = shell[i]
+      const connectedElements = Object.keys(relationsObject[startingElement]).map(el => 1 * el)
+      // console.log('connectedElements', connectedElements)
+      for (const j in connectedElements) {
+        const connectedElement = connectedElements[j]
+        if (connectedElement === 0) {
+          shells.pop()
+          return
+        }
+        if (!uniqueElementsVisited.includes(connectedElement)) { // new element, not wrapping back to zero
+          uniqueElementsVisited.push(connectedElement)
+          nextShell.push(connectedElement)
+        }
+      }
+    }
+    // console.log('nextShell', nextShell)
+    shells.push(nextShell)
+    // console.log('shells ', shells)
+    findElementsInNextShell()
+    return 
+  }
+
+  
+  return shells
+}
+
+exports.shellsOfDimensionalityFromRelationsObject = shellsOfDimensionalityFromRelationsObject
 
 function shellsFromWorldPaths (worldPaths) {
   const shells = []

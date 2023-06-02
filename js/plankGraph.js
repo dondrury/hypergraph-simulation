@@ -10,12 +10,17 @@ const layout = `
   <a href="#" class="view-interactive">Open as Interactive</a>
   <div class="svg-container"></div>
   <div class="actions">
+    <input type="text" name="startingArray" value="" placeholder="Starting Elements list"/>
     <button type="button" class="btn btn-primary" >Calculate Properties</button>
     <button type="submit" class="btn btn-success" disabled >Save Graph</button>
   </div>
   <div class="sparse-matrix-container">
     <h4>Sparse Matrix Representation</h4>
     
+  </div>
+  <div class="effect-container">
+    <h4>Shells of Dimensionality</h4>
+    <div class="shells-container"></div>
   </div>
   <div class="metrics-container">
     <h4>Metrics</h4>
@@ -29,10 +34,7 @@ const layout = `
       <h5>Calculated Number of Worldpaths: <span class="worldpathCount"></span></h5>
     </div>
   </div>
-  <div class="effect-container">
-    <h4>Shells of Effect</h4>
-    <div class="shells-container"></div>
-  </div>
+
  
   
   <style>
@@ -50,6 +52,10 @@ const layout = `
     }
 
     .pg-container .actions button {
+      display: none;
+    }
+
+    .pg-container .actions input[name="startingArray"] {
       display: none;
     }
 
@@ -108,17 +114,22 @@ const layout = `
       width: 33.3%;
       overflow-y: scroll;
       overflow-y: hidden;
+      float: left;
     }
 
     .pg-container .effect-container {
       display: none;
       padding: 5px;
+      float: left;
+      width: 33.3%;
+      overflow-y: scroll;
+      overflow-y: hidden;
     }
 
     .pg-container .metrics-container {
       display: none;
       width: 33.3%;
-      float: right;
+      float: left;
       overflow-y: scroll;
       overflow-y: hidden;
       text-align: center;
@@ -143,7 +154,7 @@ const layout = `
     }
 
     .pg-container div.shells-container .shell-element-container {
-      margin: auto;
+      // margin: auto;
       height: 100%;
       border: 0.5px solid black;
       background-color: lightgrey;
@@ -156,6 +167,7 @@ const layout = `
       margin-bottom:0px;
       padding-top: 7px;
       font-size: 12px;
+      border: 0.px solid black;
     }
   </style>
   </form>
@@ -218,7 +230,7 @@ function createGraph (graphEl) { // in standard cartesian coordinates
   }
   if (graphEl.getAttribute('readonly') === 'false') { // interactive mode
     console.log('graph is interactive')
-    
+    graphEl.querySelector('input[name="startingArray"]').style.display = 'inline-block'
     graphEl.querySelector('.actions button.btn-primary').style.display = 'inline-block'
     graphEl.querySelector('button[type="submit"]').style.display = 'inline-block'
     graphEl.querySelector('a.view-interactive').style.display = 'none'
@@ -244,7 +256,7 @@ function createGraph (graphEl) { // in standard cartesian coordinates
  
   // end main createGraph body
 
-  function createSpareMatrix() { // monto carlo volume approximation of how volume grows with radius, start with j=0
+  function createSpareMatrix() { 
     console.log('createSpareMatrix')
     const squareSize = 2
     const vectorString = graphEl.querySelector('span.vector-string').textContent
@@ -288,25 +300,27 @@ function createGraph (graphEl) { // in standard cartesian coordinates
   /* Look not at the element, but the relationships. Foloow the relationships, nameley the 2,6,2,6,2,6 graph structure, as we move the defect through another graph!!
   */
   function createEffectGraph (matrix) {
-    const startingIndex = Math.floor(matrix.length / 2) + 1
-    graphEl.querySelector('span.startingIndex').innerText = startingIndex
-    console.log('create effect graph starting at index=', startingIndex)
+    // const startingIndex = Math.floor(matrix.length / 2) + 1
+    const startingArray = graphEl.querySelector('input[name="startingArray"]').value.trim().split(',').map(el => 1 * el)
+    console.log('starting array', startingArray)
+    // graphEl.querySelector('span.startingIndex').innerText = startingIndex
+    // console.log('create effect graph starting at index=', startingIndex)
     const maxDepth = 12
     graphEl.querySelector('span.maxDepth').innerText = maxDepth
     const relationsObject = Library.createRelationsObjectFromSparseMatrix(matrix) // fastest way
     console.log('relationsObject', relationsObject)
-    const worldPaths = Library.allWorldpathsFromRelationsObject(relationsObject, startingIndex, maxDepth)
-    console.log('worldPaths', worldPaths)
-    graphEl.querySelector('span.worldpathCount').innerText = worldPaths.length.toLocaleString()
-    const shells = Library.shellsFromWorldPaths(worldPaths)
+    // const worldPaths = Library.allWorldpathsFromRelationsObject(relationsObject, startingIndex, maxDepth)
+    // console.log('worldPaths', worldPaths)
+    // graphEl.querySelector('span.worldpathCount').innerText = worldPaths.length.toLocaleString()
+    // const shells = Library.shellsFromWorldPaths(worldPaths)
+    const shells = Library.shellsOfDimensionalityFromRelationsObject(relationsObject, startingArray, maxDepth)
     console.log('shells', shells)
     const shellsContainerEl = graphEl.querySelector('div.shells-container')
-    let maxElementsInAllShells = 0
-    shells.forEach(shell => {
-      if (shell.openWorldpaths > maxElementsInAllShells) maxElementsInAllShells = shell.openWorldpaths
-    })
+    // let maxElementsInAllShells = 0
+    // shells.forEach(shell => {
+    //   if (shell.openWorldpaths > maxElementsInAllShells) maxElementsInAllShells = shell.openWorldpaths
+    // })
     shells.forEach((shell, i) => {
-      if (i == 0) return
       const shellEl = document.createElement('div')
       // shellEl.style.height = Math.ceil(100/shells.length) + '%'
       shellEl.className = 'shell'
@@ -314,20 +328,20 @@ function createGraph (graphEl) { // in standard cartesian coordinates
       const shellElementContainer = document.createElement('div')
       shellElementContainer.className = 'shell-element-container'
       shellEl.appendChild(shellElementContainer)
-      const shellElementContainerWidth = Math.round(1000 * shell.openWorldpaths/ maxElementsInAllShells) / 10
+      const shellElementContainerWidth = Math.round(100 * shell.length / shells[shells.length - 1].length) // maxShelllenght/ shelllength
       shellElementContainer.style.width = shellElementContainerWidth + '%'
-      for (const elementNumber in shell.endingPathCounts) {
-        const pathsEndingInElement = shell.endingPathCounts[elementNumber]
+      for (const j in shell) {
+        const pathsEndingInElement = shell[j]
         // console.log(elementNumber, pathsEndingInElement)
         const elementBox = document.createElement('div')
         elementBox.className = 'shell-element'
-        if (i === 1) elementBox.style.color = 'white'
+        // if (i === 1) elementBox.style.color = 'white'
         // const widthNumber = Math.floor(100 * /maxElementsInAllShells)
-        elementBox.style.width = Math.round(100000 / shell.openWorldpaths - 1)/ 1000 + '%'
-        elementBox.innerText = elementNumber
-        const heightPercent = Math.round(100 * pathsEndingInElement / shell.totalWorldPaths)
+        elementBox.style.width = Math.round(100000 / shell.length)/ 1000 + '%'
+        elementBox.innerText = shell[j]
+        // const heightPercent = Math.round(100 * pathsEndingInElement / shell.totalWorldPaths)
         elementBox.style.height = '100%'
-        elementBox.style.background = `linear-gradient(to bottom, rgb(36, 24, 94) ${heightPercent}%, #fff ${1 - heightPercent}%`
+        // elementBox.style.background = `linear-gradient(to bottom, rgb(36, 24, 94) ${heightPercent}%, #fff ${1 - heightPercent}%`
         shellElementContainer.appendChild(elementBox)
       }
       
